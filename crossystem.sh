@@ -8,81 +8,17 @@
 # v1.1.0 - implemented <var>?<value> functionality (searches for value in var)
 # v1.0.0 - basic functionality implemented
 
-
 # IF YOU WANT TO CHANGE VALUES PLEASE CHANGE THEM IN BOTH COPIES OF CROSSYSTEM VALUES!
 
 ################################################
 # PASTE (FORMATTED) OUTPUT OF crossystem HERE! #
 ################################################
 # Remove comments, put any text & hex in quotes, remove spaces
-arch="x86"
-backup_nvram_request=1
-battery_cutoff_request=0
-block_devmode=0
-clear_tpm_owner_done=1
-clear_tpm_owner_request=0
-cros_debug=0
-dbg_reset=0
-debug_build=0
-dev_boot_legacy=0
-dev_boot_signed_only=0
-dev_boot_usb=0
-dev_default_boot="disk"
-dev_enable_udc=0
-devsw_boot=0
-devsw_cur=0
-disable_alt_os_request=0
-disable_dev_request=0
-ecfw_act="RO"
-enable_alt_os_request=0
-post_ec_sync_delay=0
-alt_os_enabled=0
-fmap_base="0xff285000"
-fw_prev_result="unknown"
-fw_prev_tried="A"
-fw_result="unknown"
-fw_tried="A"
-fw_try_count=0
-fw_try_next="A"
-fw_vboot2=1
-fwb_tries=0
-fwid="Google_Fleex.11297.204.0"
-fwupdate_tries=0
-hwid="GRABBITER G7B-B4E-N5A-K44-E6S-A94-A7T"
-inside_vm=0
-kern_nv="0x0000"
-kernel_max_rollforward="0xfffffffe"
-kernkey_vfy="sig"
-loc_idx=0
-mainfw_act="A"
-mainfw_type="normal"
-nvram_cleared=0
-oprom_needed=0
-phase_enforcement="(error)"
-recovery_reason=0
-recovery_request=0
-recovery_subcode=0
-recoverysw_boot=0
-recoverysw_cur="(error)"
-recoverysw_ec_boot=0
-recoverysw_is_virtual=1
-ro_fwid="Google_Fleex.11297.204.0"
-tpm_attack=0
-tpm_fwver="0x00010001"
-tpm_kernver="0x00010001"
-tpm_rebooted=0
-tried_fwb=0
-try_ro_sync=0
-vdat_flags="0x0003cc76"
-vdat_timers="LFS=0,0 LF=0,0 LK=0,414548"
-wipeout_request=0
-wpsw_boot=1
-wpsw_cur=1
-
+__SED_REPLACEME_CROSSYSTEM_VALUES
 #########################################
 # PASTE OUTPUT OF crossystem HERE! TOO! #
 #########################################
-read -r -d '' cwossystem << EOM
+read -r -d '' cwossystem <<EOM
 arch                    = x86                            # [RO/str] Platform architecture
 backup_nvram_request    = 1                              # [RW/int] Backup the nvram somewhere at the next boot. Cleared on success.
 battery_cutoff_request  = 0                              # [RW/int] Cut off battery and shutdown on next boot
@@ -148,7 +84,6 @@ wpsw_boot               = 1                              # [RO/int] Firmware wri
 wpsw_cur                = 1                              # [RO/int] Firmware write protect hardware switch current position
 EOM
 
-
 parse1arg() {
     is_comparison= $2
     if [[ "${is_comparison}x" = "x" ]]; then
@@ -168,7 +103,7 @@ parse1arg() {
         if [[ $is_comparison -eq 1 ]]; then
             return 0
         fi
-        echo -n "${!1//$'\n'}"
+        echo -n "${!1//$'\n'/}"
     fi
 }
 
@@ -199,11 +134,11 @@ else
             logicor $current_excode 0
             current_excode=$?
         else
-          logicor $current_excode 1
-          current_excode=$?
+            logicor $current_excode 1
+            current_excode=$?
         fi
     else
-        echo -n "${!1//$'\n'}"
+        echo -n "${!1//$'\n'/}"
     fi
     echo -n " "
     for arg in "$@"; do

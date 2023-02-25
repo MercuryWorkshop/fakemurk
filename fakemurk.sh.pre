@@ -1,0 +1,71 @@
+traps() {
+    set -e
+    trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
+    trap 'echo "\"${last_command}\" command failed with exit code $?. THIS IS A BUG, REPORT IT"' EXIT
+}
+
+csys() {
+    if test -f "/usr/bin/crossystem.old"; then
+        /usr/bin/crossystem.old
+    else
+        /usr/bin/crossystem
+    fi
+}
+
+raw_crossystem_sh() {
+    base64 -d <<-EOF | bunzip2 -dc
+#include "crossystem.sh.b64"
+EOF
+}
+
+sed_escape() {
+    echo -n "$1" | while read -n1 ch; do
+        if [[ -z "$ch" ]]; then
+            echo -n "\n"
+        fi
+        echo -n \\x$(printf %x \'"$ch")
+    done
+}
+drop_crossystem_sh() {
+    vals=$(crossystem_values)
+    raw_crossystem_sh | sed -e "s/__SED_REPLACEME_CROSSYSTEM_VALUES/$(sed_escape "$escaped")/g" >/usr/bin/crossystem.old
+}
+
+escape() {
+    case $1 in
+    '' | *[!0-9]*) printf "\"$1\"" ;;
+    *) printf $1 ;;
+    esac
+}
+
+crossystem_values() {
+    readarray -t csys_lines <<<"$(csys)"
+    for element in "${csys_lines[@]}"; do
+        line_stripped=$(echo "$element" | sed -e "s/#.*//g" | sed -e 's/ .*=/=/g')
+        # sed 1: cuts out all chars after the #
+        # sed 2: cuts out all spaces before =
+        IFS='=' read -r -a pair <<<"$line_stripped"
+
+        key=$(echo ${pair[0]})
+        # cut out all characters after an instance of 2 spaces in a row
+        val="$(echo ${pair[1]} | sed -e 's/  .*//g')"
+        echo "$key=$(escape "$val")"
+    done
+}
+
+main() {
+    traps
+    mv /usr/bin/crossystem /usr/bin/crossystem.old
+    drop_crossystem_sh
+    trap - EXIT
+    exit
+
+}
+
+if [ "$0" = "$BASH_SOURCE" ]; then
+    if [ "$EUID" -ne 0 ]; then
+        echo "Please run as root"
+        exit
+    fi
+    main
+fi
