@@ -28,16 +28,16 @@ EOF
 
 csys() {
     if test -f "/usr/bin/crossystem.old"; then
-        /usr/bin/crossystem.old
+        $ROOT/usr/bin/crossystem.old "$@"
     else
-        /usr/bin/crossystem
+        $ROOT/usr/bin/crossystem "$@"
     fi
 }
 cvpd() {
     if test -f "/usr/sbin/vpd.old"; then
-        /usr/sbin/vpd.old
+        $ROOT/usr/sbin/vpd.old "$@"
     else
-        /usr/sbin/vpd
+        $ROOT/usr/sbin/vpd "$@"
     fi
 }
 
@@ -56,15 +56,9 @@ sed_escape() {
     done
 }
 drop_crossystem_sh() {
-    if [[ $1 == "shim_compat" ]]; then
-        vals=$(crossystem_values)
-        raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$escaped")/g" >/fakemurk/usr/bin/crossystem
-        chmod 777 /usr/bin/crossystem
-    else
-        vals=$(crossystem_values)
-        raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$escaped")/g" >/usr/bin/crossystem
-        chmod 777 /usr/bin/crossystem
-    fi
+    vals=$(crossystem_values)
+    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" >$ROOT/usr/bin/crossystem
+    chmod 777 $ROOT/usr/bin/crossystem
 }
 
 escape() {
@@ -129,24 +123,18 @@ crossystem_values() {
 }
 
 disable_autoupdates() {
-    if [[ $1 == "shim_compat" ]]; then
-        mv /fakemurk/usr/bin/update_engine_client /fakemurk/usr/bin/update_engine_client.old
-        mv /fakemurk/usr/sbin/update_engine /fakemurk/usr/sbin/update_engine.old
-    else
-        mv /usr/bin/update_engine_client /usr/bin/update_engine_client.old
-        mv /usr/sbin/update_engine /usr/sbin/update_engine.old
-    fi
+    mv $ROOT/usr/bin/update_engine_client $ROOT/usr/bin/update_engine_client.old
+    mv $ROOT/usr/sbin/update_engine $ROOT/usr/sbin/update_engine.old
 }
 
 disable_verity() {
     sleep 2
     echo "ROOTFS VERIFICATION IS ON! IT WILL NOW BE REMOVED"
-    dst=/dev/mmcblk0
-    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -i $dst 2>/dev/null
-    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $dst 2>/dev/null
+    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -i $DST 2>/dev/null
+    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $DST 2>/dev/null
     cat <<-EOF
 ROOTFS VERIFICATION SUCCESSFULLY REMOVED
-IN ORDER TO PROCEED, THE CHROMEBOOK MUST BE REBOOTED
+IN ORDER TO PROCCEED, THE CHROMEBOOK MUST BE REBOOTED
 
 PRESS ENTER TO REBOOT, THEN ONCE BOOTED RUN THIS SCRIPT AGAIN
 EOF
@@ -162,35 +150,66 @@ enable_autoenrollment() {
 }
 
 cleanup() {
-    if [[ $1 == shim_compat ]]; then
-        echo "wiping your stateful... say yes to the overwrite prompt"
-        mkfs.ext4 /dev/mmcblk0p1 # hope you didn't have anything valuable on there
+    if [ "$COMPAT" -eq "1" ]; then
+        echo "pressure washing"
+        mkfs.ext4 ${DST}p1
     else
         rm -f /mnt/stateful_partition/.developer_mode
         # this prevents an annoying bootloop
-        echo "fast safe" >'/mnt/stateful_partition/factory_install_reset'
+        echo "fast safe" >/mnt/stateful_partition/factory_install_reset
     fi
+}
+
+fakemurk() {
+    touch $ROOT/sbin/init 2>/dev/null || disable_verity
+    echo "disabling autoupdates"
+    disable_autoupdates
+    sleep 1
+    echo "dropping crossystem.sh"
+    mv $ROOT/usr/bin/crossystem $ROOT/usr/bin/crossystem.old
+    drop_crossystem_sh
+
 }
 
 main() {
     traps
-    if [[ $1 == "shim_compat" ]]; then
-        touch /fakemurk/sbin/init 2>/dev/null || disable_verity
-    else
-        touch /sbin/init 2>/dev/null || disable_verity
-    fi
-    echo "disabling autoupdates"
-    disable_autoupdates "$1"
-    sleep 1
-    echo "dropping crossystem.sh"
-    if [[ $1 == "shim_compat" ]]; then
-        mv /fakemurk/usr/bin/crossystem /fakemurk/usr/bin/crossystem.old
-    else
-        mv /usr/bin/crossystem /usr/bin/crossystem.old
-    fi
-    drop_crossystem_sh "$1"
+    fakemurk_info
 
+    DST=/dev/mmcblk0
+
+    if csys mainfw_type?recovery; then
+        echo "Entering shim compatability mode"
+        COMPAT=1
+
+        sleep 3
+        mkdir /mnta
+        mount ${DST}p3 /mnta
+        mkdir /mntb
+        mount ${DST}p5 /mntb
+
+        ROOT=/mnta
+        fakemurk
+        echo "murking alternative root"
+        sleep 3
+        ROOT=/mntb
+        fakemurk
+
+        umount /mnta
+        umount /mntb
+    else
+        fakemurk
+    fi
+
+    echo "cleaning up"
+    cleanup
     enable_autoenrollment
+    echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
+    swallow_stdin
+    read
+    reboot
+    trap - EXIT
+    exit
+
 }
 
 if [ "$0" = "$BASH_SOURCE" ]; then
@@ -202,29 +221,5 @@ if [ "$0" = "$BASH_SOURCE" ]; then
         echo "Please run as root"
         exit
     fi
-    fakemurk_info
-
-    if crossystem mainfw_type?recovery; then
-        echo "Entering shim compatability mode"
-        sleep 3
-        mkdir /fakemurk
-        mount /dev/mmcblk0p3 /fakemurk
-        main "shim_compat"
-        umount /fakemurk
-        mount /dev/mmcblk0p5 /fakemurk
-        main "shim_compat"
-        umount /fakemurk
-        echo "cleaning up"
-        cleanup "shim_compat"
-    else
-        main
-        echo "cleaning up"
-        cleanup
-    fi
-    echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
-    swallow_stdin
-    read
-    reboot
-    trap - EXIT
-    exit
+    main
 fi
