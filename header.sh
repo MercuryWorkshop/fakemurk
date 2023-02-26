@@ -14,3 +14,21 @@
 # v1.1.1 - hotfix for stupid crossystem
 # v1.1.0 - implemented <var>?<value> functionality (searches for value in var)
 # v1.0.0 - basic functionality implemented
+ascii_info() {
+    cat <<-EOF
+ ________ ________  ___  __    _______   _____ ______   ___  ___  ________  ___  __
+|\\  _____\\\\   __  \\|\\  \\|\\  \\ |\\  ___ \\ |\\   _ \\  _   \\|\\  \\|\\  \\|\\   __  \\|\\  \\|\\  \\
+\\ \\  \\__/\\ \\  \\|\\  \\ \\  \\/  /|\\ \\   __/|\\ \\  \\\\\\__\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\/  /|_
+ \\ \\   __\\\\ \\   __  \\ \\   ___  \\ \\  \\_|/_\\ \\  \\\\|__| \\  \\ \\  \\\\\\  \\ \\   _  _\\ \\   ___  \\
+  \\ \\  \\_| \\ \\  \\ \\  \\ \\  \\\\ \\  \\ \\  \\_|\\ \\ \\  \\    \\ \\  \\ \\  \\\\\\  \\ \\  \\\\  \\\\ \\  \\\\ \\  \\
+   \\ \\__\\   \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\_______\\ \\__\\    \\ \\__\\ \\_______\\ \\__\\\\ _\\\\ \\__\\\\ \\__\\
+    \\|__|    \\|__|\\|__|\\|__| \\|__|\\|_______|\\|__|     \\|__|\\|_______|\\|__|\\|__|\\|__| \\|__|
+
+THIS IS FREE SOFTWARE! if you paid for this, you have been scammed and should demand your money back
+
+fakemurk - a tool made by coolelectronics and r58playz to spoof verified boot while enrolled
+you can find this script, its explanation, and documentation here: https://github.com/MercuryWorkshop/fakemurk
+EOF
+
+    # spaces get mangled by makefile, so this must be separate
+}

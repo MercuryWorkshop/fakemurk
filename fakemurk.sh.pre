@@ -10,20 +10,7 @@ swallow_stdin() {
     done
 }
 fakemurk_info() {
-    cat <<-EOF
- ________ ________  ___  __    _______   _____ ______   ___  ___  ________  ___  __
-|\\  _____\\\\   __  \\|\\  \\|\\  \\ |\\  ___ \\ |\\   _ \\  _   \\|\\  \\|\\  \\|\\   __  \\|\\  \\|\\  \\
-\\ \\  \\__/\\ \\  \\|\\  \\ \\  \\/  /|\\ \\   __/|\\ \\  \\\\\\__\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\/  /|_
- \\ \\   __\\\\ \\   __  \\ \\   ___  \\ \\  \\_|/_\\ \\  \\\\|__| \\  \\ \\  \\\\\\  \\ \\   _  _\\ \\   ___  \\
-  \\ \\  \\_| \\ \\  \\ \\  \\ \\  \\\\ \\  \\ \\  \\_|\\ \\ \\  \\    \\ \\  \\ \\  \\\\\\  \\ \\  \\\\  \\\\ \\  \\\\ \\  \\
-   \\ \\__\\   \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\_______\\ \\__\\    \\ \\__\\ \\_______\\ \\__\\\\ _\\\\ \\__\\\\ \\__\\
-    \\|__|    \\|__|\\|__|\\|__| \\|__|\\|_______|\\|__|     \\|__|\\|_______|\\|__|\\|__|\\|__| \\|__|
-
-THIS IS FREE SOFTWARE! if you paid for this, you have been scammed and should demand your money back
-
-fakemurk - a tool made by coolelectronics and r58playz to spoof verified boot while enrolled
-you can find this script, its explanation, and documentation here: https://github.com/MercuryWorkshop/fakemurk
-EOF
+    ascii_info
     sleep 3
     cat <<-EOF
 
@@ -70,7 +57,8 @@ sed_escape() {
 }
 drop_crossystem_sh() {
     vals=$(crossystem_values)
-    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$escaped")/g" >/usr/bin/crossystem
+    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" >/usr/bin/crossystem
+    chmod 777 /usr/bin/crossystem
 }
 
 escape() {
@@ -90,8 +78,46 @@ crossystem_values() {
 
         key=$(echo ${pair[0]})
         # cut out all characters after an instance of 2 spaces in a row
-
         val="$(echo ${pair[1]} | sed -e 's/  .*//g')"
+        if [ "$key" == "devsw_cur" ]; then
+            val=0
+        fi
+        if [ "$key" == "devsw_boot" ]; then
+            val=0
+        fi
+        if [ "$key" == "mainfw_type" ]; then
+            val="normal"
+        fi
+        if [ "$key" == "mainfw_act" ]; then
+            val="A"
+        fi
+        if [ "$key" == "cros_debug" ]; then
+            val=0
+        fi
+        if [ "$key" == "dev_boot_legacy" ]; then
+            val=0
+        fi
+        if [ "$key" == "dev_boot_signed_only" ]; then
+            val=0
+        fi
+        if [ "$key" == "dev_boot_usb" ]; then
+            val=0
+        fi
+        if [ "$key" == "dev_default_boot" ]; then
+            val="disk"
+        fi
+        if [ "$key" == "dev_enable_udc" ]; then
+            val=0
+        fi
+        if [ "$key" == "alt_os_enabled" ]; then
+            val=0
+        fi
+        if [ "$key" == "recoverysw_boot" ]; then
+            val=0
+        fi
+        if [ "$key" == "recoverysw_cur" ]; then
+            val=0
+        fi
         echo "$key=$(escape "$val")"
     done
 }
@@ -105,8 +131,8 @@ disable_verity() {
     sleep 2
     echo "ROOTFS VERIFICATION IS ON! IT WILL NOW BE REMOVED"
     dst=/dev/mmcblk0
-    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -I $dst
-    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -I $dst
+    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -i $dst 2>/dev/null
+    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $dst 2>/dev/null
     cat <<-EOF
 ROOTFS VERIFICATION SUCCESSFULLY REMOVED
 IN ORDER TO PROCCEED, THE CHROMEBOOK MUST BE REBOOTED
@@ -119,15 +145,22 @@ EOF
 }
 
 enable_autoenrollment() {
-    cvpd -i RW_VPD -s check_enrollment=1
-    cvpd -i RW_VPD -s block_devmode=0
-    csys block_devmode=0
+    cvpd -i RW_VPD -s check_enrollment=1 2>/dev/null
+    cvpd -i RW_VPD -s block_devmode=0 2>/dev/null
+    csys block_devmode=0 2 &>/dev/null
+}
+
+cleanup() {
+
+    rm -f /mnt/stateful_partition/.developer_mode
+    # this prevents an annoying bootloop
+    echo "fast safe" >'/mnt/stateful_partition/factory_install_reset'
 }
 
 main() {
     traps
     fakemurk_info
-    touch /sbin/init || disable_verity
+    touch /sbin/init 2>/dev/null || disable_verity
     echo "disabling autoupdates"
     disable_autoupdates
     sleep 1
@@ -136,7 +169,13 @@ main() {
     drop_crossystem_sh
 
     enable_autoenrollment
-    echo "done! now you must powerwash your chromebook to enroll into management"
+    echo "cleaning up"
+    cleanup
+
+    echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
+    swallow_stdin
+    read
+    reboot
     trap - EXIT
     exit
 

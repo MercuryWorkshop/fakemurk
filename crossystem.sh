@@ -20,7 +20,7 @@ chmod a+rw $mutablepath
 
 # load values from mutable crossystem
 # shellcheck disable=SC1090 # crossystem needs to source an external file for mutable values
-source $mutablepath
+source $mutablepath 2>/dev/null
 #__SED_REPLACEME_CROSSYSTEM_VALUES#
 
 ################################################
