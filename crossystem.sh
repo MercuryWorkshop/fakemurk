@@ -1,108 +1,122 @@
 #!/bin/bash
-# crossystem.sh v2.0.0
-# made by r58Playz and stackoverflow
-# emulates crossystem but with static values to trick brunch into thinking it is a valid chromebook with a valid everything
-# version history:
-# v2.0.0 - implemented all functionality
-# v1.1.1 - hotfix for stupid crossystem
-# v1.1.0 - implemented <var>?<value> functionality (searches for value in var)
-# v1.0.0 - basic functionality implemented
 
-# IF YOU WANT TO CHANGE VALUES PLEASE CHANGE THEM IN BOTH COPIES OF CROSSYSTEM VALUES!
+# Mutable values path (needs to be writable and persistent across boots - try /mnt/stateful_partition)
+mutablepath="/mnt/stateful_partition/mwtrollinggoogleforfakemurk"
+#mutablepath="./mwtrollinggoogleforfakemurk"
 
-################################################
-# PASTE (FORMATTED) OUTPUT OF crossystem HERE! #
-################################################
+##################################################
+# PASTE (FORMATTED) OUTPUT OF `crossystem` HERE! #
+##################################################
 # Remove comments, put any text & hex in quotes, remove spaces
-__SED_REPLACEME_CROSSYSTEM_VALUES
-#########################################
-# PASTE OUTPUT OF crossystem HERE! TOO! #
-#########################################
+
+##############################################################################################################################################################################
+#                               YOU SHOULD NOT NEED TO MODIFY THIS PART OF THE SCRIPT IF YOU ARE JUST A CONSUMER! BELOW IS THE INTERNAL LOGIC!                               #
+##############################################################################################################################################################################
+
+# make sure the mutable crossystem file exists lol
+touch $mutablepath
+# just in case
+chmod a+rw $mutablepath
+
+# load values from mutable crossystem
+# shellcheck disable=SC1090 # crossystem needs to source an external file for mutable values
+source $mutablepath
+#__SED_REPLACEME_CROSSYSTEM_VALUES#
+
+################################################
+# v3 now autopopulates this for you. be happy! #
+################################################
 read -r -d '' cwossystem <<EOM
-arch                    = x86                            # [RO/str] Platform architecture
-backup_nvram_request    = 1                              # [RW/int] Backup the nvram somewhere at the next boot. Cleared on success.
-battery_cutoff_request  = 0                              # [RW/int] Cut off battery and shutdown on next boot
-block_devmode           = 0                              # [RW/int] Block all use of developer mode
-clear_tpm_owner_done    = 1                              # [RW/int] Clear TPM owner done
-clear_tpm_owner_request = 0                              # [RW/int] Clear TPM owner on next boot
-cros_debug              = 0                              # [RO/int] OS should allow debug features
-dbg_reset               = 0                              # [RW/int] Debug reset mode request
-debug_build             = 0                              # [RO/int] OS image built for debug features
-dev_boot_legacy         = 0                              # [RW/int] Enable developer mode boot Legacy OSes
-dev_boot_signed_only    = 0                              # [RW/int] Enable developer mode boot only from official kernels
-dev_boot_usb            = 0                              # [RW/int] Enable developer mode boot from USB/SD
-dev_default_boot        = disk                           # [RW/str] Default boot from disk, legacy or usb
-dev_enable_udc          = 0                              # [RW/int] Enable USB Device Controller
-devsw_boot              = 0                              # [RO/int] Developer switch position at boot
-devsw_cur               = 0                              # [RO/int] Developer switch current position
-disable_alt_os_request  = 0                              # [RW/int] Disable Alt OS mode on next boot (writable)
-disable_dev_request     = 0                              # [RW/int] Disable virtual dev-mode on next boot
-ecfw_act                = RO                             # [RO/str] Active EC firmware
-enable_alt_os_request   = 0                              # [RW/int] Enable Alt OS mode on next boot (writable)
-post_ec_sync_delay      = 0                              # [RW/int] Short delay after EC software sync (persistent, writable, eve only)
-alt_os_enabled          = 0                              # [RO/int] Alt OS state (1 if enabled, 0 if disabled)
-fmap_base               = 0xff285000                     # [RO/int] Main firmware flashmap physical address
-fw_prev_result          = unknown                        # [RO/str] Firmware result of previous boot (vboot2)
-fw_prev_tried           = A                              # [RO/str] Firmware tried on previous boot (vboot2)
-fw_result               = unknown                        # [RW/str] Firmware result this boot (vboot2)
-fw_tried                = A                              # [RO/str] Firmware tried this boot (vboot2)
-fw_try_count            = 0                              # [RW/int] Number of times to try fw_try_next
-fw_try_next             = A                              # [RW/str] Firmware to try next (vboot2)
-fw_vboot2               = 1                              # [RO/int] 1 if firmware was selected by vboot2 or 0 otherwise
-fwb_tries               = 0                              # [RW/int] Try firmware B count
-fwid                    = Google_Fleex.11297.204.0       # [RO/str] Active firmware ID
-fwupdate_tries          = 0                              # [RW/int] Times to try OS firmware update (inside kern_nv)
-hwid                    = GRABBITER G7B-B4E-N5A-K44-E6S-A94-A7T # [RO/str] Hardware ID
-inside_vm               = 0                              # [RO/int] Running in a VM?
-kern_nv                 = 0x0000                         # [RO/int] Non-volatile field for kernel use
-kernel_max_rollforward  = 0xfffffffe                     # [RW/int] Max kernel version to store into TPM
-kernkey_vfy             = sig                            # [RO/str] Type of verification done on kernel key block
-loc_idx                 = 0                              # [RW/int] Localization index for firmware screens
-mainfw_act              = A                              # [RO/str] Active main firmware
-mainfw_type             = normal                         # [RO/str] Active main firmware type
-nvram_cleared           = 0                              # [RW/int] Have NV settings been lost?  Write 0 to clear
-oprom_needed            = 0                              # [RW/int] Should we load the VGA Option ROM at boot?
-phase_enforcement       = (error)                        # [RO/int] Board should have full security settings applied
-recovery_reason         = 0                              # [RO/int] Recovery mode reason for current boot
-recovery_request        = 0                              # [RW/int] Recovery mode request
-recovery_subcode        = 0                              # [RW/int] Recovery reason subcode
-recoverysw_boot         = 0                              # [RO/int] Recovery switch position at boot
-recoverysw_cur          = (error)                        # [RO/int] Recovery switch current position
-recoverysw_ec_boot      = 0                              # [RO/int] Recovery switch position at EC boot
-recoverysw_is_virtual   = 1                              # [RO/int] Recovery switch is virtual
-ro_fwid                 = Google_Fleex.11297.204.0       # [RO/str] Read-only firmware ID
-tpm_attack              = 0                              # [RW/int] TPM was interrupted since this flag was cleared
-tpm_fwver               = 0x00010001                     # [RO/int] Firmware version stored in TPM
-tpm_kernver             = 0x00010001                     # [RO/int] Kernel version stored in TPM
-tpm_rebooted            = 0                              # [RO/int] TPM requesting repeated reboot (vboot2)
-tried_fwb               = 0                              # [RO/int] Tried firmware B before A this boot
-try_ro_sync             = 0                              # [RO/int] try read only software sync
-vdat_flags              = 0x0003cc76                     # [RO/int] Flags from VbSharedData
-vdat_timers             = LFS=0,0 LF=0,0 LK=0,414548     # [RO/str] Timer values from VbSharedData
-wipeout_request         = 0                              # [RW/int] Firmware requested factory reset (wipeout)
-wpsw_boot               = 1                              # [RO/int] Firmware write protect hardware switch position at boot
-wpsw_cur                = 1                              # [RO/int] Firmware write protect hardware switch current position
+arch                    = $arch                            # [RO/str] Platform architecture
+backup_nvram_request    = $backup_nvram_request                              # [RW/int] Backup the nvram somewhere at the next boot. Cleared on success.
+battery_cutoff_request  = $battery_cutoff_request                              # [RW/int] Cut off battery and shutdown on next boot
+block_devmode           = $block_devmode                              # [RW/int] Block all use of developer mode
+clear_tpm_owner_done    = $clear_tpm_owner_done                              # [RW/int] Clear TPM owner done
+clear_tpm_owner_request = $clear_tpm_owner_request                              # [RW/int] Clear TPM owner on next boot
+cros_debug              = $cros_debug                              # [RO/int] OS should allow debug features
+dbg_reset               = $dbg_reset                              # [RW/int] Debug reset mode request
+debug_build             = $debug_build                              # [RO/int] OS image built for debug features
+dev_boot_legacy         = $dev_boot_legacy                              # [RW/int] Enable developer mode boot Legacy OSes
+dev_boot_signed_only    = $dev_boot_signed_only                              # [RW/int] Enable developer mode boot only from official kernels
+dev_boot_usb            = $dev_boot_usb                              # [RW/int] Enable developer mode boot from USB/SD
+dev_default_boot        = $dev_default_boot                           # [RW/str] Default boot from disk, legacy or usb
+dev_enable_udc          = $dev_enable_udc                              # [RW/int] Enable USB Device Controller
+devsw_boot              = $devsw_boot                              # [RO/int] Developer switch position at boot
+devsw_cur               = $devsw_cur                              # [RO/int] Developer switch current position
+disable_alt_os_request  = $disable_alt_os_request                              # [RW/int] Disable Alt OS mode on next boot (writable)
+disable_dev_request     = $disable_dev_request                              # [RW/int] Disable virtual dev-mode on next boot
+ecfw_act                = $ecfw_act                             # [RO/str] Active EC firmware
+enable_alt_os_request   = $enable_alt_os_request                              # [RW/int] Enable Alt OS mode on next boot (writable)
+post_ec_sync_delay      = $post_ec_sync_delay                              # [RW/int] Short delay after EC software sync (persistent, writable, eve only)
+alt_os_enabled          = $alt_os_enabled                              # [RO/int] Alt OS state (1 if enabled, 0 if disabled)
+fmap_base               = $fmap_base                     # [RO/int] Main firmware flashmap physical address
+fw_prev_result          = $fw_prev_result                        # [RO/str] Firmware result of previous boot (vboot2)
+fw_prev_tried           = $fw_prev_tried                              # [RO/str] Firmware tried on previous boot (vboot2)
+fw_result               = $fw_result                        # [RW/str] Firmware result this boot (vboot2)
+fw_tried                = $fw_tried                              # [RO/str] Firmware tried this boot (vboot2)
+fw_try_count            = $fw_try_count                              # [RW/int] Number of times to try fw_try_next
+fw_try_next             = $fw_try_next                              # [RW/str] Firmware to try next (vboot2)
+fw_vboot2               = $fw_vboot2                              # [RO/int] 1 if firmware was selected by vboot2 or 0 otherwise
+fwb_tries               = $fwb_tries                              # [RW/int] Try firmware B count
+fwid                    = $fwid       # [RO/str] Active firmware ID
+fwupdate_tries          = $fwupdate_tries                              # [RW/int] Times to try OS firmware update (inside kern_nv)
+hwid                    = $hwid # [RO/str] Hardware ID
+inside_vm               = $inside_vm                              # [RO/int] Running in a VM?
+kern_nv                 = $kern_nv                         # [RO/int] Non-volatile field for kernel use
+kernel_max_rollforward  = $kernel_max_rollforward                     # [RW/int] Max kernel version to store into TPM
+kernkey_vfy             = $kernkey_vfy                            # [RO/str] Type of verification done on kernel key block
+loc_idx                 = $loc_idx                              # [RW/int] Localization index for firmware screens
+mainfw_act              = $mainfw_act                              # [RO/str] Active main firmware
+mainfw_type             = $mainfw_type                         # [RO/str] Active main firmware type
+nvram_cleared           = $nvram_cleared                              # [RW/int] Have NV settings been lost?  Write 0 to clear
+oprom_needed            = $oprom_needed                              # [RW/int] Should we load the VGA Option ROM at boot?
+phase_enforcement       = $phase_enforcement                        # [RO/int] Board should have full security settings applied
+recovery_reason         = $recovery_reason                              # [RO/int] Recovery mode reason for current boot
+recovery_request        = $recovery_request                              # [RW/int] Recovery mode request
+recovery_subcode        = $recovery_subcode                              # [RW/int] Recovery reason subcode
+recoverysw_boot         = $recoverysw_boot                              # [RO/int] Recovery switch position at boot
+recoverysw_cur          = $recoverysw_cur                        # [RO/int] Recovery switch current position
+recoverysw_ec_boot      = $recoverysw_ec_boot                              # [RO/int] Recovery switch position at EC boot
+recoverysw_is_virtual   = $recoverysw_is_virtual                              # [RO/int] Recovery switch is virtual
+ro_fwid                 = $ro_fwid       # [RO/str] Read-only firmware ID
+tpm_attack              = $tpm_attack                              # [RW/int] TPM was interrupted since this flag was cleared
+tpm_fwver               = $tpm_fwver                     # [RO/int] Firmware version stored in TPM
+tpm_kernver             = $tpm_kernver                     # [RO/int] Kernel version stored in TPM
+tpm_rebooted            = $tpm_rebooted                              # [RO/int] TPM requesting repeated reboot (vboot2)
+tried_fwb               = $tried_fwb                              # [RO/int] Tried firmware B before A this boot
+try_ro_sync             = $try_ro_sync                              # [RO/int] try read only software sync
+vdat_flags              = $vdat_flags                     # [RO/int] Flags from VbSharedData
+vdat_timers             = $vdat_timers     # [RO/str] Timer values from VbSharedData
+wipeout_request         = $wipeout_request                              # [RW/int] Firmware requested factory reset (wipeout)
+wpsw_boot               = $wpsw_boot                              # [RO/int] Firmware write protect hardware switch position at boot
+wpsw_cur                = $wpsw_cur                              # [RO/int] Firmware write protect hardware switch current position
 EOM
 
 parse1arg() {
-    is_comparison= $2
-    if [[ "${is_comparison}x" = "x" ]]; then
-        is_comparison=2
-    fi
     if [[ $1 == *"?"* ]]; then
-        if [[ $is_comparison -eq 0 ]]; then
-            return 0
-        fi
-        aft="${1#*\?}" # after
-        bef="${1%\?*}" # before
+        # comparison mode
+        aft="${1#*\?}" # value to check for
+        bef="${1%\?*}" # key
         if [[ "${!bef}" == *"$aft"* ]]; then
             return 0
         fi
         return 1
-    else
-        if [[ $is_comparison -eq 1 ]]; then
-            return 0
+    elif [[ $1 == *"="* ]]; then
+        # mutable crossystem mode (NEW)
+        aft="${1#*\=}" # value to set
+        bef="${1%\=*}" # key
+        # check if value exists in mutable file
+        containsvalue=$(
+            source $mutablepath
+            [[ -z "${!aft}" ]] && echo 1 || echo 0
+        )
+        if [[ $containsvalue -eq 0 ]]; then # crossystem.sh: line 181: 0: command not found
+            sed -i "s/${bef}.*/${bef}=${aft}/" $mutablepath
+        else
+            echo "${bef}=${aft}" >>$mutablepath
         fi
+    else
+        # get value mode
         echo -n "${!1//$'\n'/}"
     fi
 }
@@ -120,37 +134,15 @@ logicor() {
 if [[ $# -eq 0 ]]; then
     echo -e "$cwossystem"
 elif [[ $# -eq 1 ]]; then
-    parse1arg $1
+    parse1arg "$1"
     exit $?
 else
-    is_comparison=0
-    current_excode=0
-    is_first=1
-    if [[ $1 == *"?"* ]]; then
-        is_comparison=1
-        aft="${1#*\?}" # after
-        bef="${1%\?*}" # before
-        if [[ "${!bef}" == *"$aft"* ]]; then
-            logicor $current_excode 0
-            current_excode=$?
-        else
-            logicor $current_excode 1
-            current_excode=$?
-        fi
-    else
-        echo -n "${!1//$'\n'/}"
-    fi
-    echo -n " "
     for arg in "$@"; do
-        if [[ is_first -eq 1 ]]; then
-            is_first=0
-            continue
-        fi
-        parse1arg $arg
+        parse1arg "$arg"
         excode="$?"
-        logicor $current_excode $excode
+        logicor "$current_excode" "$excode"
         current_excode=$?
         echo -n " "
     done
-    exit $current_excode
+    exit "$current_excode"
 fi

@@ -1,7 +1,42 @@
 traps() {
     set -e
     trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
-    trap 'echo "\"${last_command}\" command failed with exit code $?. THIS IS A BUG, REPORT IT"' EXIT
+    trap 'echo "\"${last_command}\" command failed with exit code $?. THIS IS A BUG, REPORT IT HERE https://github.com/MercuryWorkshop/fakemurk"' EXIT
+}
+
+swallow_stdin() {
+    while read -t 0 notused; do
+        read input
+    done
+}
+fakemurk_info() {
+    cat <<-EOF
+ ________ ________  ___  __    _______   _____ ______   ___  ___  ________  ___  __
+|\\  _____\\\\   __  \\|\\  \\|\\  \\ |\\  ___ \\ |\\   _ \\  _   \\|\\  \\|\\  \\|\\   __  \\|\\  \\|\\  \\
+\\ \\  \\__/\\ \\  \\|\\  \\ \\  \\/  /|\\ \\   __/|\\ \\  \\\\\\__\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\/  /|_
+ \\ \\   __\\\\ \\   __  \\ \\   ___  \\ \\  \\_|/_\\ \\  \\\\|__| \\  \\ \\  \\\\\\  \\ \\   _  _\\ \\   ___  \\
+  \\ \\  \\_| \\ \\  \\ \\  \\ \\  \\\\ \\  \\ \\  \\_|\\ \\ \\  \\    \\ \\  \\ \\  \\\\\\  \\ \\  \\\\  \\\\ \\  \\\\ \\  \\
+   \\ \\__\\   \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\_______\\ \\__\\    \\ \\__\\ \\_______\\ \\__\\\\ _\\\\ \\__\\\\ \\__\\
+    \\|__|    \\|__|\\|__|\\|__| \\|__|\\|_______|\\|__|     \\|__|\\|_______|\\|__|\\|__|\\|__| \\|__|
+
+THIS IS FREE SOFTWARE! if you paid for this, you have been scammed and should demand your money back
+
+fakemurk - a tool made by coolelectronics and r58playz to spoof verified boot while enrolled
+you can find this script, its explanation, and documentation here: https://github.com/MercuryWorkshop/fakemurk
+EOF
+    sleep 3
+    cat <<-EOF
+
+WARNING: THIS SCRIPT WILL REQUIRE THE REMOVAL OF ROOTFS VERIFICATION, AND THE DISABLING OF AUTOUPDATES
+THIS MEANS THAT IF YOU EVER TURN OFF DEVMODE, YOUR SYSTEM WILL BE BRICKED UNTIL RECOVERY
+
+WE ARE NOT RESPONSIBLE FOR DAMAGE, YOU BEING STUPID AND MISUSING THIS, OR GETTING IN TROUBLE
+DO YOU UNDERSTAND??
+
+(enter to proceed, ctrl+c to quit)
+EOF
+    swallow_stdin
+    read
 }
 
 csys() {
@@ -9,6 +44,13 @@ csys() {
         /usr/bin/crossystem.old
     else
         /usr/bin/crossystem
+    fi
+}
+cvpd() {
+    if test -f "/usr/sbin/vpd.old"; then
+        /usr/sbin/vpd.old
+    else
+        /usr/sbin/vpd
     fi
 }
 
@@ -28,7 +70,7 @@ sed_escape() {
 }
 drop_crossystem_sh() {
     vals=$(crossystem_values)
-    raw_crossystem_sh | sed -e "s/__SED_REPLACEME_CROSSYSTEM_VALUES/$(sed_escape "$escaped")/g" >/usr/bin/crossystem.old
+    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$escaped")/g" >/usr/bin/crossystem
 }
 
 escape() {
@@ -48,21 +90,63 @@ crossystem_values() {
 
         key=$(echo ${pair[0]})
         # cut out all characters after an instance of 2 spaces in a row
+
         val="$(echo ${pair[1]} | sed -e 's/  .*//g')"
         echo "$key=$(escape "$val")"
     done
 }
 
+disable_autoupdates() {
+    mv /usr/bin/update_engine_client /usr/bin/update_engine_client.old
+    mv /usr/sbin/update_engine /usr/sbin/update_engine.old
+}
+
+disable_verity() {
+    sleep 2
+    echo "ROOTFS VERIFICATION IS ON! IT WILL NOW BE REMOVED"
+    dst=/dev/mmcblk0
+    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -I $dst
+    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -I $dst
+    cat <<-EOF
+ROOTFS VERIFICATION SUCCESSFULLY REMOVED
+IN ORDER TO PROCCEED, THE CHROMEBOOK MUST BE REBOOTED
+
+PRESS ENTER TO REBOOT, THEN ONCE BOOTED RUN THIS SCRIPT AGAIN
+EOF
+    swallow_stdin
+    read
+    reboot
+}
+
+enable_autoenrollment() {
+    cvpd -i RW_VPD -s check_enrollment=1
+    cvpd -i RW_VPD -s block_devmode=0
+    csys block_devmode=0
+}
+
 main() {
     traps
+    fakemurk_info
+    touch /sbin/init || disable_verity
+    echo "disabling autoupdates"
+    disable_autoupdates
+    sleep 1
+    echo "dropping crossystem.sh"
     mv /usr/bin/crossystem /usr/bin/crossystem.old
     drop_crossystem_sh
+
+    enable_autoenrollment
+    echo "done! now you must powerwash your chromebook to enroll into management"
     trap - EXIT
     exit
 
 }
 
 if [ "$0" = "$BASH_SOURCE" ]; then
+    # if [ "$SHELL" != "/bin/bash" ]; then
+    #     echo "hey! you ran this with \"sh\" (or some other shell). i would really prefer if you ran it with \"bash\" instead"
+    # fi
+
     if [ "$EUID" -ne 0 ]; then
         echo "Please run as root"
         exit
