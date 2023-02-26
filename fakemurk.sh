@@ -14,6 +14,24 @@
 # v1.1.1 - hotfix for stupid crossystem
 # v1.1.0 - implemented <var>?<value> functionality (searches for value in var)
 # v1.0.0 - basic functionality implemented
+ascii_info() {
+    cat <<-EOF
+ ________ ________  ___  __    _______   _____ ______   ___  ___  ________  ___  __
+|\\  _____\\\\   __  \\|\\  \\|\\  \\ |\\  ___ \\ |\\   _ \\  _   \\|\\  \\|\\  \\|\\   __  \\|\\  \\|\\  \\
+\\ \\  \\__/\\ \\  \\|\\  \\ \\  \\/  /|\\ \\   __/|\\ \\  \\\\\\__\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\/  /|_
+ \\ \\   __\\\\ \\   __  \\ \\   ___  \\ \\  \\_|/_\\ \\  \\\\|__| \\  \\ \\  \\\\\\  \\ \\   _  _\\ \\   ___  \\
+  \\ \\  \\_| \\ \\  \\ \\  \\ \\  \\\\ \\  \\ \\  \\_|\\ \\ \\  \\    \\ \\  \\ \\  \\\\\\  \\ \\  \\\\  \\\\ \\  \\\\ \\  \\
+   \\ \\__\\   \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\_______\\ \\__\\    \\ \\__\\ \\_______\\ \\__\\\\ _\\\\ \\__\\\\ \\__\\
+    \\|__|    \\|__|\\|__|\\|__| \\|__|\\|_______|\\|__|     \\|__|\\|_______|\\|__|\\|__|\\|__| \\|__|
+
+THIS IS FREE SOFTWARE! if you paid for this, you have been scammed and should demand your money back
+
+fakemurk - a tool made by coolelectronics and r58playz to spoof verified boot while enrolled
+you can find this script, its explanation, and documentation here: https://github.com/MercuryWorkshop/fakemurk
+EOF
+
+    # spaces get mangled by makefile, so this must be separate
+}
 
 
 
@@ -37,16 +55,7 @@ swallow_stdin() {
     done
 }
 fakemurk_info() {
-    cat <<-EOF
- ________ ________  ___  __    _______   _____ ______   ___  ___  ________  ___  __
-|\\  _____\\\\   __  \\|\\  \\|\\  \\ |\\  ___ \\ |\\   _ \\  _   \\|\\  \\|\\  \\|\\   __  \\|\\  \\|\\  \\\ \\  \\__/\\ \\  \\|\\  \\ \\  \\/  /|\\ \\   __/|\\ \\  \\\\\\__\\ \\  \\ \\  \\\\\\  \\ \\  \\|\\  \\ \\  \\/  /|_
- \\ \\   __\\\\ \\   __  \\ \\   ___  \\ \\  \\_|/_\\ \\  \\\\|__| \\  \\ \\  \\\\\\  \\ \\   _  _\\ \\   ___  \  \\ \\  \\_| \\ \\  \\ \\  \\ \\  \\\\ \\  \\ \\  \\_|\\ \\ \\  \\    \\ \\  \\ \\  \\\\\\  \\ \\  \\\\  \\\\ \\  \\\\ \\  \   \\ \\__\\   \\ \\__\\ \\__\\ \\__\\\\ \\__\\ \\_______\\ \\__\\    \\ \\__\\ \\_______\\ \\__\\\\ _\\\\ \\__\\\\ \\__\    \\|__|    \\|__|\\|__|\\|__| \\|__|\\|_______|\\|__|     \\|__|\\|_______|\\|__|\\|__|\\|__| \\|__|
-
-THIS IS FREE SOFTWARE! if you paid for this, you have been scammed and should demand your money back
-
-fakemurk - a tool made by coolelectronics and r58playz to spoof verified boot while enrolled
-you can find this script, its explanation, and documentation here: https://github.com/MercuryWorkshop/fakemurk
-EOF
+    ascii_info
     sleep 3
     cat <<-EOF
 
@@ -218,9 +227,16 @@ EOF
 }
 
 enable_autoenrollment() {
-    cvpd -i RW_VPD -s check_enrollment=1
-    cvpd -i RW_VPD -s block_devmode=0
-    csys block_devmode=0
+    cvpd -i RW_VPD -s check_enrollment=1 2>/dev/null
+    cvpd -i RW_VPD -s block_devmode=0 2>/dev/null
+    csys block_devmode=0 2 &>/dev/null
+}
+
+cleanup() {
+
+    rm -f /mnt/stateful_partition/.developer_mode
+    # this prevents an annoying bootloop
+    echo "fast safe" >'/mnt/stateful_partition/factory_install_reset'
 }
 
 main() {
@@ -235,11 +251,13 @@ main() {
     drop_crossystem_sh
 
     enable_autoenrollment
+    echo "cleaning up"
+    cleanup
 
-    rm -f /mnt/stateful_partition/.developer_mode
-    # this prevents an annoying bootloop
-
-    echo "done! now you must powerwash your chromebook to enroll into management"
+    echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
+    swallow_stdin
+    read
+    reboot
     trap - EXIT
     exit
 

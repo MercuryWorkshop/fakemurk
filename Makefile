@@ -1,5 +1,4 @@
 fakemurk.sh: fakemurk.sh.post
-	chmod +w fakemurk.sh
 	cat header.sh fakemurk.sh.post > $@
 	chmod -w $@
 fakemurk.sh.post: fakemurk.sh.pre crossystem.sh.b64
