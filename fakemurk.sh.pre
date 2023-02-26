@@ -9,6 +9,7 @@ swallow_stdin() {
         read input
     done
 }
+
 fakemurk_info() {
     ascii_info
     sleep 3
@@ -121,10 +122,15 @@ crossystem_values() {
         echo "$key=$(escape "$val")"
     done
 }
+move_bin() {
+    mv $1 $1.old
+}
 
 disable_autoupdates() {
-    mv $ROOT/usr/bin/update_engine_client $ROOT/usr/bin/update_engine_client.old
-    mv $ROOT/usr/sbin/update_engine $ROOT/usr/sbin/update_engine.old
+    move_bin $ROOT/usr/bin/update_engine_client
+    move_bin $ROOT/usr/sbin/update_engine
+    nullify_bin $ROOT/usr/bin/update_engine_client
+    nullify_bin $ROOT/usr/sbin/update_engine
 }
 
 disable_verity() {
@@ -150,7 +156,7 @@ enable_autoenrollment() {
 }
 
 cleanup() {
-    if [ "$COMPAT" -eq "1" ]; then
+    if [ "$COMPAT" -eq 1 ]; then
         echo "pressure washing... say yes to the overwrite prompt"
         mkfs.ext4 ${DST}p1 # hope you didn't have anything valuable on there
     else

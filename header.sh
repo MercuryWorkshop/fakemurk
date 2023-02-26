@@ -32,3 +32,10 @@ EOF
 
     # spaces get mangled by makefile, so this must be separate
 }
+nullify_bin() {
+    cat <<-EOF >$1
+#!/bin/bash
+exit
+EOF
+    # shebangs crash makefile
+}
