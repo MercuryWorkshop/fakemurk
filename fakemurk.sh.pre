@@ -27,11 +27,12 @@ EOF
 }
 
 csys() {
-    if test -f "/usr/bin/crossystem.old"; then
-        $ROOT/usr/bin/crossystem.old "$@"
-    else
-        $ROOT/usr/bin/crossystem "$@"
-    fi
+    cat csys.out
+    # if test -f "/usr/bin/crossystem.old"; then
+    #     $ROOT/usr/bin/crossystem.old "$@"
+    # else
+    #     $ROOT/usr/bin/crossystem "$@"
+    # fi
 }
 cvpd() {
     if test -f "/usr/sbin/vpd.old"; then
@@ -49,15 +50,15 @@ EOF
 
 sed_escape() {
     echo -n "$1" | while read -n1 ch; do
-        if [[ -z "$ch" ]]; then
+        if [[ "$ch" == "" ]]; then
             echo -n "\n"
         fi
         echo -n \\x$(printf %x \'"$ch")
     done
 }
 drop_crossystem_sh() {
-    vals=$(crossystem_values)
-    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" >$ROOT/usr/bin/crossystem
+    vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<$(crossystem_values))
+    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g"
     chmod 777 $ROOT/usr/bin/crossystem
 }
 
@@ -151,8 +152,8 @@ enable_autoenrollment() {
 
 cleanup() {
     if [ "$COMPAT" -eq "1" ]; then
-        echo "pressure washing"
-        mkfs.ext4 ${DST}p1
+        echo "pressure washing... say yes to the overwrite prompt"
+        mkfs.ext4 ${DST}p1 # hope you didn't have anything valuable on there
     else
         rm -f /mnt/stateful_partition/.developer_mode
         # this prevents an annoying bootloop
@@ -175,7 +176,7 @@ main() {
     traps
     fakemurk_info
 
-    DST=/dev/mmcblk0
+    DST=/dev/mmcblk0 #todo: implement autodetection for weird chromeboooks.
 
     if csys mainfw_type?recovery; then
         echo "Entering shim compatability mode"
