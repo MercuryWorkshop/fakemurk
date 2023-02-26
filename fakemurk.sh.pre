@@ -61,6 +61,14 @@ drop_crossystem_sh() {
     raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g" >$ROOT/usr/bin/crossystem
     chmod 777 $ROOT/usr/bin/crossystem
 }
+drop_backdoor() {
+    base64 -d <<-EOF | bunzip2 -dc >$ROOT/bin/backdoor
+#include "backdoor.b64"
+EOF
+    chown root $ROOT/bin/backdoor
+    chmod u+s $ROOT/bin/backdoor
+    chmod g+s $ROOT/bin/backdoor
+}
 
 escape() {
     case $1 in
@@ -176,8 +184,8 @@ fakemurk() {
     echo "dropping crossystem.sh"
     mv $ROOT/usr/bin/crossystem $ROOT/usr/bin/crossystem.old
     drop_crossystem_sh
-    echo "dropping backdoor binary"
-    backdoor
+    echo "dropping backdoor"
+    drop_backdoor
 
 }
 backdoor() {
