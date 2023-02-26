@@ -1,3 +1,5 @@
+. /usr/share/misc/chromeos-common.sh
+
 traps() {
     set -e
     trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -42,12 +44,6 @@ cvpd() {
     fi
 }
 
-raw_crossystem_sh() {
-    base64 -d <<-EOF | bunzip2 -dc
-#include "crossystem.sh.b64"
-EOF
-}
-
 sed_escape() {
     echo -n "$1" | while read -n1 ch; do
         if [[ "$ch" == "" ]]; then
@@ -56,11 +52,13 @@ sed_escape() {
         echo -n \\x$(printf %x \'"$ch")
     done
 }
-drop_crossystem_sh() {
-    vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<$(crossystem_values))
-    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g" >$ROOT/usr/bin/crossystem
-    chmod 777 $ROOT/usr/bin/crossystem
+
+raw_crossystem_sh() {
+    base64 -d <<-EOF | bunzip2 -dc
+#include "crossystem.sh.b64"
+EOF
 }
+
 drop_backdoor() {
     base64 -d <<-EOF | bunzip2 -dc >$ROOT/bin/backdoor
 #include "backdoor.b64"
@@ -68,6 +66,18 @@ EOF
     chown root $ROOT/bin/backdoor
     chmod u+s $ROOT/bin/backdoor
     chmod g+s $ROOT/bin/backdoor
+}
+drop_pollen() {
+    base64 -d <<-EOF | bunzip2 -dc >$ROOT/etc/opt/chrome/policies/managed/policy.json
+#include "pollen.json.b64"
+EOF
+    chmod 777 $ROOT/etc/opt/chrome/policies/managed/policy.json
+}
+
+drop_crossystem_sh() {
+    vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<$(crossystem_values))
+    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g" >$ROOT/usr/bin/crossystem
+    chmod 777 $ROOT/usr/bin/crossystem
 }
 
 escape() {
@@ -172,7 +182,7 @@ cleanup() {
     else
         rm -f /mnt/stateful_partition/.developer_mode
         # this prevents an annoying bootloop
-        echo "fast safe" >/mnt/stateful_partition/factory_install_reset
+        echo "keepimg" >/mnt/stateful_partition/factory_install_reset
     fi
 }
 
@@ -180,24 +190,25 @@ fakemurk() {
     touch $ROOT/sbin/init 2>/dev/null || disable_verity
     echo "disabling autoupdates"
     disable_autoupdates
-    sleep 1
+    sleep 2
     echo "dropping crossystem.sh"
     mv $ROOT/usr/bin/crossystem $ROOT/usr/bin/crossystem.old
     drop_crossystem_sh
-    echo "dropping backdoor"
+    sleep 2
+    echo "dropping backdoor binary"
     drop_backdoor
-
+    sleep 2
+    echo "dropping pollen"
+    drop_pollen
 }
-backdoor() {
-    cp $ROOT/bin/bash $ROOT/bin/backdoor
-    chmod u+s $ROOT/bin/backdoor
-}
-
 main() {
     traps
     fakemurk_info
 
-    DST=/dev/mmcblk0 #todo: implement autodetection for weird chromeboooks.
+    DST=$(get_fixed_dst_drive)
+    if [ -z $DST ]; then
+        DST=/dev/mmcblk0
+    fi
 
     if csys mainfw_type?recovery; then
         echo "Entering shim compatability mode"
