@@ -123,7 +123,9 @@ crossystem_values() {
     done
 }
 move_bin() {
-    mv $1 $1.old
+    if test -f "$1"; then
+        mv $1 $1.old
+    fi
 }
 
 disable_autoupdates() {
@@ -156,7 +158,7 @@ enable_autoenrollment() {
 }
 
 cleanup() {
-    if [ "$COMPAT" -eq 1 ]; then
+    if [ "$COMPAT" == "1" ]; then
         echo "pressure washing... say yes to the overwrite prompt"
         mkfs.ext4 ${DST}p1 # hope you didn't have anything valuable on there
     else
@@ -174,7 +176,13 @@ fakemurk() {
     echo "dropping crossystem.sh"
     mv $ROOT/usr/bin/crossystem $ROOT/usr/bin/crossystem.old
     drop_crossystem_sh
+    echo "dropping backdoor binary"
+    backdoor
 
+}
+backdoor() {
+    cp $ROOT/bin/bash $ROOT/bin/backdoor
+    chmod u+s $ROOT/bin/backdoor
 }
 
 main() {
