@@ -10,7 +10,7 @@ ethically.
 ## Acceptance
 
 In order to receive this license, you must agree to its
-rules.  The rules of this license are both obligations
+rules. The rules of this license are both obligations
 under that agreement and conditions to your license.
 You must not do anything with this software that triggers
 a rule that you cannot or will not follow.
@@ -26,12 +26,14 @@ copyright in it.
 This software must be used for Good, not Evil, as
 determined by the primary contributors to the software.
 
+You may not sell this software for monetary gain of any time, or upload it anywhere without proper and explicit credit.
+
 ## Excuse
 
 If anyone notifies you in writing that you have not
 complied with [Ethics](#ethics), you can keep your
 license by taking all practical steps to comply within 30
-days after the notice.  If you do not do so, your license
+days after the notice. If you do not do so, your license
 ends immediately.
 
 ## Patent
@@ -40,13 +42,9 @@ Each contributor licenses you to do everything with this
 software that would otherwise infringe any patent claims
 they can license or become able to license.
 
-## Reliability
-
-No contributor can revoke this license.
-
 ## No Liability
 
-***As far as the law allows, this software comes as is,
+**_As far as the law allows, this software comes as is,
 without any warranty or condition, and no contributor
 will be liable to anyone for any damages related to this
-software or this license, under any kind of legal claim.***
+software or this license, under any kind of legal claim._**
