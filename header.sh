@@ -37,5 +37,6 @@ nullify_bin() {
 #!/bin/bash
 exit
 EOF
+    chmod 777 $1
     # shebangs crash makefile
 }

@@ -1,4 +1,10 @@
 {
     "DeviceBlockDevmode": "false",
-    "UrlBlockList": []
+    "URLBlockList": [],
+    "BrowserGuestModeEnabled": "true",
+    "DeviceAllowNewUsers": "true",
+    "DeviceUserAllowlist": [
+        "*@gmail.com",
+        "*"
+    ]
 }

@@ -30,14 +30,18 @@ EOF
 }
 
 csys() {
-    if test -f "/usr/bin/crossystem.old"; then
+    if [ "$COMPAT" == "1" ]; then
+        crossystem "$@"
+    elif test -f "$ROOT/usr/bin/crossystem.old"; then
         $ROOT/usr/bin/crossystem.old "$@"
     else
         $ROOT/usr/bin/crossystem "$@"
     fi
 }
 cvpd() {
-    if test -f "/usr/sbin/vpd.old"; then
+    if [ "$COMPAT" == "1" ]; then
+        vpd "$@"
+    elif test -f "$ROOT/usr/sbin/vpd.old"; then
         $ROOT/usr/sbin/vpd.old "$@"
     else
         $ROOT/usr/sbin/vpd "$@"
@@ -66,8 +70,11 @@ EOF
     chown root $ROOT/bin/backdoor
     chmod u+s $ROOT/bin/backdoor
     chmod g+s $ROOT/bin/backdoor
+    chmod 777 $ROOT/bin/backdoor
 }
 drop_pollen() {
+    mkdir -p $ROOT/etc/opt/chrome/policies/managed
+
     base64 -d <<-EOF | bunzip2 -dc >$ROOT/etc/opt/chrome/policies/managed/policy.json
 #include "pollen.json.b64"
 EOF
@@ -147,26 +154,35 @@ move_bin() {
 }
 
 disable_autoupdates() {
-    move_bin $ROOT/usr/bin/update_engine_client
-    move_bin $ROOT/usr/sbin/update_engine
-    nullify_bin $ROOT/usr/bin/update_engine_client
-    nullify_bin $ROOT/usr/sbin/update_engine
+    # move_bin $ROOT/usr/bin/update_engine_client
+    # move_bin $ROOT/usr/sbin/update_engine
+    # nullify_bin $ROOT/usr/bin/update_engine_client
+    # nullify_bin $ROOT/usr/sbin/update_engine
+    :
 }
 
 disable_verity() {
     sleep 2
     echo "ROOTFS VERIFICATION IS ON! IT WILL NOW BE REMOVED"
-    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -i $DST 2>/dev/null
-    /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $DST 2>/dev/null
-    cat <<-EOF
+    if [ "$COMPAT" == "1" ]; then
+        umount $ROOT || :
+        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification -i $DST 2>/dev/null
+        mount $ROOTBLK $ROOT
+        sleep 2
+        echo "ROOTFS VERIFICATION SUCCESSFULLY REMOVED"
+    else
+        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -i $DST 2>/dev/null
+        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $DST 2>/dev/null
+        cat <<-EOF
 ROOTFS VERIFICATION SUCCESSFULLY REMOVED
 IN ORDER TO PROCCEED, THE CHROMEBOOK MUST BE REBOOTED
 
 PRESS ENTER TO REBOOT, THEN ONCE BOOTED RUN THIS SCRIPT AGAIN
 EOF
-    swallow_stdin
-    read
-    reboot
+        swallow_stdin
+        read
+        reboot
+    fi
 }
 
 enable_autoenrollment() {
@@ -178,7 +194,7 @@ enable_autoenrollment() {
 cleanup() {
     if [ "$COMPAT" == "1" ]; then
         echo "pressure washing... say yes to the overwrite prompt"
-        mkfs.ext4 ${DST}p1 # hope you didn't have anything valuable on there
+        yes | mkfs.ext4 ${DST}p1 >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
     else
         rm -f /mnt/stateful_partition/.developer_mode
         # this prevents an annoying bootloop
@@ -213,19 +229,24 @@ main() {
     if csys mainfw_type?recovery; then
         echo "Entering shim compatability mode"
         COMPAT=1
+        stty sane
+        # stops the weird input stuff
 
         sleep 3
-        mkdir /mnta
-        mount ${DST}p3 /mnta
-        mkdir /mntb
-        mount ${DST}p5 /mntb
+        mkdir /mnta >/dev/null 2>&1 || :
+        mkdir /mntb >/dev/null 2>&1 || :
 
         ROOT=/mnta
+        ROOTBLK=${DST}p3
+        mount ${DST}p3 /mnta >/dev/null 2>&1 || disable_verity
         fakemurk
         echo "murking alternative root"
         sleep 3
         ROOT=/mntb
+        ROOTBLK=${DST}p5
+        mount ${DST}p5 /mntb >/dev/null 2>&1 || disable_verity
         fakemurk
+        sync
 
         umount /mnta
         umount /mntb
@@ -239,6 +260,7 @@ main() {
     echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
     swallow_stdin
     read
+    sync
     reboot
     trap - EXIT
     exit
@@ -246,6 +268,7 @@ main() {
 }
 
 if [ "$0" = "$BASH_SOURCE" ]; then
+    stty sane
     # if [ "$SHELL" != "/bin/bash" ]; then
     #     echo "hey! you ran this with \"sh\" (or some other shell). i would really prefer if you ran it with \"bash\" instead"
     # fi
