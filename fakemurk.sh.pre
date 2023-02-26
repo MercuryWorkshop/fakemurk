@@ -27,12 +27,11 @@ EOF
 }
 
 csys() {
-    cat csys.out
-    # if test -f "/usr/bin/crossystem.old"; then
-    #     $ROOT/usr/bin/crossystem.old "$@"
-    # else
-    #     $ROOT/usr/bin/crossystem "$@"
-    # fi
+    if test -f "/usr/bin/crossystem.old"; then
+        $ROOT/usr/bin/crossystem.old "$@"
+    else
+        $ROOT/usr/bin/crossystem "$@"
+    fi
 }
 cvpd() {
     if test -f "/usr/sbin/vpd.old"; then
@@ -58,7 +57,7 @@ sed_escape() {
 }
 drop_crossystem_sh() {
     vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<$(crossystem_values))
-    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g"
+    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g" >$ROOT/usr/bin/crossystem
     chmod 777 $ROOT/usr/bin/crossystem
 }
 
