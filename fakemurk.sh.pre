@@ -56,9 +56,15 @@ sed_escape() {
     done
 }
 drop_crossystem_sh() {
-    vals=$(crossystem_values)
-    raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" >/usr/bin/crossystem
-    chmod 777 /usr/bin/crossystem
+    if [[ $1 == "shim_compat" ]]; then
+        vals=$(crossystem_values)
+        raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$escaped")/g" >/fakemurk/usr/bin/crossystem
+        chmod 777 /usr/bin/crossystem
+    else
+        vals=$(crossystem_values)
+        raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$escaped")/g" >/usr/bin/crossystem
+        chmod 777 /usr/bin/crossystem
+    fi
 }
 
 escape() {
@@ -123,8 +129,13 @@ crossystem_values() {
 }
 
 disable_autoupdates() {
-    mv /usr/bin/update_engine_client /usr/bin/update_engine_client.old
-    mv /usr/sbin/update_engine /usr/sbin/update_engine.old
+    if [[ $1 == "shim_compat" ]]; then
+        mv /fakemurk/usr/bin/update_engine_client /fakemurk/usr/bin/update_engine_client.old
+        mv /fakemurk/usr/sbin/update_engine /fakemurk/usr/sbin/update_engine.old
+    else
+        mv /usr/bin/update_engine_client /usr/bin/update_engine_client.old
+        mv /usr/sbin/update_engine /usr/sbin/update_engine.old
+    fi
 }
 
 disable_verity() {
@@ -135,7 +146,7 @@ disable_verity() {
     /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $dst 2>/dev/null
     cat <<-EOF
 ROOTFS VERIFICATION SUCCESSFULLY REMOVED
-IN ORDER TO PROCCEED, THE CHROMEBOOK MUST BE REBOOTED
+IN ORDER TO PROCEED, THE CHROMEBOOK MUST BE REBOOTED
 
 PRESS ENTER TO REBOOT, THEN ONCE BOOTED RUN THIS SCRIPT AGAIN
 EOF
@@ -151,34 +162,35 @@ enable_autoenrollment() {
 }
 
 cleanup() {
-
-    rm -f /mnt/stateful_partition/.developer_mode
-    # this prevents an annoying bootloop
-    echo "fast safe" >'/mnt/stateful_partition/factory_install_reset'
+    if [[ $1 == shim_compat ]]; then
+        echo "wiping your stateful... say yes to the overwrite prompt"
+        mkfs.ext4 /dev/mmcblk0p1 # hope you didn't have anything valuable on there
+    else
+        rm -f /mnt/stateful_partition/.developer_mode
+        # this prevents an annoying bootloop
+        echo "fast safe" >'/mnt/stateful_partition/factory_install_reset'
+    fi
 }
 
 main() {
     traps
-    fakemurk_info
-    touch /sbin/init 2>/dev/null || disable_verity
+    if [[ $1 == "shim_compat" ]]; then
+        touch /fakemurk/sbin/init 2>/dev/null || disable_verity
+    else
+        touch /sbin/init 2>/dev/null || disable_verity
+    fi
     echo "disabling autoupdates"
-    disable_autoupdates
+    disable_autoupdates "$1"
     sleep 1
     echo "dropping crossystem.sh"
-    mv /usr/bin/crossystem /usr/bin/crossystem.old
-    drop_crossystem_sh
+    if [[ $1 == "shim_compat" ]]; then
+        mv /fakemurk/usr/bin/crossystem /fakemurk/usr/bin/crossystem.old
+    else
+        mv /usr/bin/crossystem /usr/bin/crossystem.old
+    fi
+    drop_crossystem_sh "$1"
 
     enable_autoenrollment
-    echo "cleaning up"
-    cleanup
-
-    echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
-    swallow_stdin
-    read
-    reboot
-    trap - EXIT
-    exit
-
 }
 
 if [ "$0" = "$BASH_SOURCE" ]; then
@@ -190,5 +202,29 @@ if [ "$0" = "$BASH_SOURCE" ]; then
         echo "Please run as root"
         exit
     fi
-    main
+    fakemurk_info
+
+    if crossystem mainfw_type?recovery; then
+        echo "Entering shim compatability mode"
+        sleep 3
+        mkdir /fakemurk
+        mount /dev/mmcblk0p3 /fakemurk
+        main "shim_compat"
+        umount /fakemurk
+        mount /dev/mmcblk0p5 /fakemurk
+        main "shim_compat"
+        umount /fakemurk
+        echo "cleaning up"
+        cleanup "shim_compat"
+    else
+        main
+        echo "cleaning up"
+        cleanup
+    fi
+    echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
+    swallow_stdin
+    read
+    reboot
+    trap - EXIT
+    exit
 fi
