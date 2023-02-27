@@ -19,6 +19,5 @@ function disableext() {
 }
 
 function enableext() {
-    rm /home/chronos/user/Extensions/$1/*
-    chmod 000 /home/chronos/user/Extensions/$1
+    chmod 777 /home/chronos/user/Extensions/$1
 }
