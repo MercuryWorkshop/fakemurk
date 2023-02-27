@@ -1,12 +1,16 @@
 {
-    "DeviceBlockDevmode": "false",
-    "URLBlockList": [],
-    "BrowserGuestModeEnabled": "true",
-    "DeviceAllowNewUsers": "true",
+    "DeviceBlockDevmode": false,
+    "URLBlocklist": [],
+    "BrowserGuestModeEnabled": true,
+    "DeviceAllowNewUsers": true,
     "DeviceUserAllowlist": [
         "*@gmail.com",
         "*"
     ],
+    "WallpaperImage": {
+        "hash": "f0f4170422c4c3c0c6a4cd8b7b71479b1a9b8f258a321110ee456e228390e8aa",
+        "url": "https://cdn.r58playz.ml/sh1mmerbg.jpeg"
+    },
     "DeviceWallpaperImage": {
         "hash": "f0f4170422c4c3c0c6a4cd8b7b71479b1a9b8f258a321110ee456e228390e8aa",
         "url": "https://cdn.r58playz.ml/sh1mmerbg.jpeg"

@@ -1,9 +1,6 @@
 rw.out
 ro.out
 csys.out
-crossystem.sh.b64
 fakemurk.sh.post
 fakemurk.sh
-backdoor
-backdoor.b64
-pollen.json.b64
+*.b64

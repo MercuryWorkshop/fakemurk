@@ -80,6 +80,22 @@ drop_pollen() {
 EOF
     chmod 777 $ROOT/etc/opt/chrome/policies/managed/policy.json
 }
+drop_daemon() {
+    base64 -d <<-EOF | bunzip2 -dc >$ROOT/etc/init/pre-startup.conf
+#include "pre-startup.conf.b64"
+EOF
+    base64 -d <<-EOF | bunzip2 -dc >$ROOT/sbin/fakemurk-daemon.sh
+#include "fakemurk-daemon.sh.b64"
+EOF
+    chmod 777 $ROOT/sbin/fakemurk-daemon.sh
+}
+drop_startup_patch() {
+    mv $ROOT/sbin/chromeos_startup.sh $ROOT/sbin/chromeos_startup.old.sh
+    base64 -d <<-EOF | bunzip2 -dc >$ROOT/sbin/chromeos_startup.sh
+#include "chromeos_startup.sh.b64"
+EOF
+    chmod 777 $ROOT/sbin/chromeos_startup.sh
+}
 
 drop_crossystem_sh() {
     vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<$(crossystem_values))
@@ -191,17 +207,6 @@ enable_autoenrollment() {
     csys block_devmode=0 2 &>/dev/null
 }
 
-cleanup() {
-    if [ "$COMPAT" == "1" ]; then
-        echo "pressure washing... say yes to the overwrite prompt"
-        yes | mkfs.ext4 ${DST}p1 >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
-    else
-        rm -f /mnt/stateful_partition/.developer_mode
-        # this prevents an annoying bootloop
-        echo "keepimg" >/mnt/stateful_partition/factory_install_reset
-    fi
-}
-
 fakemurk() {
     touch $ROOT/sbin/init 2>/dev/null || disable_verity
     echo "disabling autoupdates"
@@ -216,6 +221,13 @@ fakemurk() {
     sleep 2
     echo "dropping pollen"
     drop_pollen
+    sleep 2
+    if [ -z $COMPAT ]; then
+        echo "preventing stateful bootloop"
+        drop_startup_patch
+    fi
+    echo "dropping fakemurk daemon"
+    drop_daemon
 }
 main() {
     traps
@@ -247,7 +259,10 @@ main() {
         mount ${DST}p5 /mntb >/dev/null 2>&1 || disable_verity
         fakemurk
         sync
-
+        if [ "$COMPAT" == "1" ]; then
+            echo "pressure washing... say yes to the overwrite prompt"
+            yes | mkfs.ext4 ${DST}p1 >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
+        fi
         umount /mnta
         umount /mntb
     else
@@ -255,7 +270,6 @@ main() {
     fi
 
     echo "cleaning up"
-    cleanup
     enable_autoenrollment
     echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
     swallow_stdin
