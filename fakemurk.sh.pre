@@ -5,6 +5,13 @@ traps() {
     trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
     trap 'echo "\"${last_command}\" command failed with exit code $?. THIS IS A BUG, REPORT IT HERE https://github.com/MercuryWorkshop/fakemurk"' EXIT
 }
+config() {
+    swallow_stdin
+    read -p "Would you like to enable rootfs restore? It will add an option to quickly revert all changes and re-enroll, at the cost of ~6G of storage space (Y/n): " restore_choice
+    case "$restore_choice" in
+    Y | y) ROOTFS_BACKUP=1 ;;
+    esac
+}
 
 swallow_stdin() {
     while read -t 0 notused; do
@@ -90,11 +97,19 @@ EOF
     chmod 777 $ROOT/sbin/fakemurk-daemon.sh
 }
 drop_startup_patch() {
-    mv $ROOT/sbin/chromeos_startup.sh $ROOT/sbin/chromeos_startup.old.sh
+    move_bin $ROOT/sbin/chromeos_startup.sh
     base64 -d <<-EOF | bunzip2 -dc >$ROOT/sbin/chromeos_startup.sh
 #include "chromeos_startup.sh.b64"
 EOF
     chmod 777 $ROOT/sbin/chromeos_startup.sh
+}
+drop_mush() {
+    move_bin $ROOT/usr/bin/crosh
+    base64 -d <<-EOF | bunzip2 -dc >$ROOT/usr/bin/crosh
+#include "mush.sh.b64"
+EOF
+    chmod 777 $ROOT/usr/bin/crosh
+
 }
 
 drop_crossystem_sh() {
@@ -170,11 +185,8 @@ move_bin() {
 }
 
 disable_autoupdates() {
-    # move_bin $ROOT/usr/bin/update_engine_client
-    # move_bin $ROOT/usr/sbin/update_engine
-    # nullify_bin $ROOT/usr/bin/update_engine_client
-    # nullify_bin $ROOT/usr/sbin/update_engine
-    :
+    # thanks phene i guess?
+    sed -i $ROOT/etc/lsb-release -e "s/CHROMEOS_AUSERVER=.*/CHROMEOS_AUSERVER=$(sed_escape "https://mercurywork.shop/update")"
 }
 
 disable_verity() {
@@ -208,6 +220,16 @@ enable_autoenrollment() {
 }
 
 fakemurk() {
+    if [ "$ROOTFS_BACKUP" == "1" ]; then
+        touch $ROOT/sbin/init 2>/dev/null
+        if [ $? -eq 1 ]; then
+            echo "staging rootfs backup"
+            touch $ROOT/fakemurk_trigger_backup
+        else
+            echo "rootfs verification is disabled for this partition, and thus it is not eligable for backup. ignoring..."
+            ROOTFS_BACKUP=0
+        fi
+    fi
     touch $ROOT/sbin/init 2>/dev/null || disable_verity
     echo "disabling autoupdates"
     disable_autoupdates
@@ -226,12 +248,16 @@ fakemurk() {
         echo "preventing stateful bootloop"
         drop_startup_patch
     fi
+    echo "installing mush shell"
+    drop_mush
+    sleep 2
     echo "dropping fakemurk daemon"
     drop_daemon
 }
 main() {
     traps
     fakemurk_info
+    config
 
     DST=$(get_fixed_dst_drive)
     if [ -z $DST ]; then
@@ -260,7 +286,7 @@ main() {
         fakemurk
         sync
         if [ "$COMPAT" == "1" ]; then
-            echo "pressure washing... say yes to the overwrite prompt"
+            echo "pressure washing..."
             yes | mkfs.ext4 ${DST}p1 >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
         fi
         umount /mnta

@@ -1,7 +1,9 @@
 #include <unistd.h>
-int main()
+int main(int argc, char **argv)
 {
     setuid(0);
-    char* argv[3] = {"/bin/bash", NULL, NULL};
-    execve("/bin/bash", argv, NULL);
+
+    char* progname = "/bin/bash";
+    argv[0] = progname;
+    execve(progname, argv, NULL);
 }
