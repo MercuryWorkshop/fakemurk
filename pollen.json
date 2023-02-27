@@ -2,7 +2,16 @@
     "DeviceBlockDevmode": false,
     "URLBlocklist": [],
     "BrowserGuestModeEnabled": true,
+    "DeviceGuestModeEnabled": true,
+    "ProfilePickerOnStartupAvailability": 0,
+    "DeveloperToolsAvailability": 1,
+    "IncognitoModeAvailability": 0,
     "DeviceAllowNewUsers": true,
+    "DeviceShowUserNamesOnSignin": true,
+    "LacrosAvailability": "user_choice",
+    "LacrosSecondaryProfilesAllowed": true,
+    "SystemFeaturesDisableList": [],
+    "ArcPolicy": {},
     "DeviceUserAllowlist": [
         "*@gmail.com",
         "*"
