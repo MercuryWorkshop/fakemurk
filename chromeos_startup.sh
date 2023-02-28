@@ -12,5 +12,5 @@ if [ ! -f /stateful_unfucked ]; then
     touch /stateful_unfucked
     reboot
 else
-    exec /sbin/chromeos_startup.old.sh
+    exec /sbin/chromeos_startup.sh.old
 fi

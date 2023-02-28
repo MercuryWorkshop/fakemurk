@@ -1,4 +1,4 @@
-. /usr/share/misc/chromeos-common.sh
+. /usr/share/misc/chromeos-common.sh || :
 
 traps() {
     set -e
@@ -186,7 +186,7 @@ move_bin() {
 
 disable_autoupdates() {
     # thanks phene i guess?
-    sed -i $ROOT/etc/lsb-release -e "s/CHROMEOS_AUSERVER=.*/CHROMEOS_AUSERVER=$(sed_escape "https://mercurywork.shop/update")"
+    sed -i $ROOT/etc/lsb-release -e "s/CHROMEOS_AUSERVER=.*/CHROMEOS_AUSERVER=$(sed_escape "https://mercurywork.shop/update")/"
 }
 
 disable_verity() {
@@ -220,16 +220,16 @@ enable_autoenrollment() {
 }
 
 fakemurk() {
-    if [ "$ROOTFS_BACKUP" == "1" ]; then
-        touch $ROOT/sbin/init 2>/dev/null
-        if [ $? -eq 1 ]; then
-            echo "staging rootfs backup"
-            touch $ROOT/fakemurk_trigger_backup
-        else
-            echo "rootfs verification is disabled for this partition, and thus it is not eligable for backup. ignoring..."
-            ROOTFS_BACKUP=0
-        fi
-    fi
+    # if [ "$ROOTFS_BACKUP" == "1" ]; then
+    #     touch $ROOT/sbin/init 2>/dev/null
+    #     if [ $? -eq 1 ]; then
+    #         echo "staging rootfs backup"
+    #         touch $ROOT/fakemurk_trigger_backup
+    #     else
+    #         echo "rootfs verification is disabled for this partition, and thus it is not eligable for backup. ignoring..."
+    #         ROOTFS_BACKUP=0
+    #     fi
+    # fi
     touch $ROOT/sbin/init 2>/dev/null || disable_verity
     echo "disabling autoupdates"
     disable_autoupdates

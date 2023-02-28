@@ -77,10 +77,10 @@ powerwash() {
 }
 
 revert() {
-
+    :
 }
 editpollen() {
-
+    :
 }
 
 harddisableext() { # calling it "hard disable" because it only reenables when you press

@@ -7,12 +7,12 @@
 
     {
         while true; do
-            cryptohome --action=remove_firmware_management_parameters
+            cryptohome --action=remove_firmware_management_parameters >/dev/null 2>&1
         done
     } &
     {
         while true; do
-            vpd -i RW_VPD -s block_devmode=0
+            vpd -i RW_VPD -s block_devmode=0 >/dev/null 2>&1
             sleep 5
         done
     } &
