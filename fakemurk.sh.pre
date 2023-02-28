@@ -111,25 +111,6 @@ EOF
     chmod 777 $ROOT/usr/bin/crosh
 }
 
-stage_sshd() {
-    # thanks rory! <3
-    mkdir -p $ROOT/ssh/root
-    chmod -R 777 $ROOT/ssh/root
-
-    ssh-keygen -f $ROOT/ssh/root/key -N '' -t rsa >/dev/null
-    cp $ROOT/ssh/root $ROOT/rootkey
-    chmod 600 $ROOT/ssh/root
-    chmod 644 $ROOT/rootkey
-
-    cat >$ROOT/ssh/config <<-EOF
-AuthorizedKeysFile /ssh/%u/key.pub
-StrictModes no
-HostKey /ssh/root/key
-Port 1337
-EOF
-
-}
-
 drop_crossystem_sh() {
     vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<$(crossystem_values))
     raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g" >$ROOT/usr/bin/crossystem
@@ -262,13 +243,12 @@ fakemurk() {
     echo "dropping pollen"
     drop_pollen
     sleep 2
+    echo "staging sshd"
     echo "preventing stateful bootloop"
     drop_startup_patch
     if [ "$COMPAT" == "1" ]; then
         touch $ROOT/stateful_unfucked
     fi
-    echo "staging sshd"
-    stage_sshd
     echo "installing mush shell"
     drop_mush
     sleep 2
