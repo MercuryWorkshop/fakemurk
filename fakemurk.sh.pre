@@ -109,6 +109,24 @@ drop_mush() {
 #include "mush.sh.b64"
 EOF
     chmod 777 $ROOT/usr/bin/crosh
+}
+
+stage_sshd() {
+    # thanks rory! <3
+    mkdir -p $ROOT/ssh/root
+    chmod -R 777 $ROOT/ssh/root
+
+    ssh-keygen -f $ROOT/ssh/root/key -N '' -t rsa >/dev/null
+    cp $ROOT/ssh/root $ROOT/rootkey
+    chmod 600 $ROOT/ssh/root
+    chmod 644 $ROOT/rootkey
+
+    cat >$ROOT/ssh/config <<-EOF
+AuthorizedKeysFile /ssh/%u/key.pub
+StrictModes no
+HostKey /ssh/root/key
+Port 1337
+EOF
 
 }
 
@@ -216,7 +234,7 @@ EOF
 enable_autoenrollment() {
     cvpd -i RW_VPD -s check_enrollment=1 2>/dev/null
     cvpd -i RW_VPD -s block_devmode=0 2>/dev/null
-    csys block_devmode=0 2 &>/dev/null
+    csys block_devmode=0 2>/dev/null
 }
 
 fakemurk() {
@@ -244,10 +262,13 @@ fakemurk() {
     echo "dropping pollen"
     drop_pollen
     sleep 2
-    if [ -z $COMPAT ]; then
-        echo "preventing stateful bootloop"
-        drop_startup_patch
+    echo "preventing stateful bootloop"
+    drop_startup_patch
+    if [ "$COMPAT" == "1" ]; then
+        touch $ROOT/stateful_unfucked
     fi
+    echo "staging sshd"
+    stage_sshd
     echo "installing mush shell"
     drop_mush
     sleep 2

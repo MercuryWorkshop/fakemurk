@@ -17,11 +17,11 @@ This shell contains a list of utilities for performing certain actions on a fake
 EOF
 }
 doas() {
-    /bin/backdoor -c "$@"
+    ssh -p 1337 -i /rootkey -oStrictHostKeyChecking=no root@127.0.0.1 "$@"
 }
 
 runjob() {
-    trap 'kill -2 $!' INT
+    trap 'kill -2 $! >/dev/null 2>&1' INT
     (
         $@
     )
@@ -50,9 +50,9 @@ main() {
 (9) Edit Pollen
 EOF
         swallow_stdin
-        read -p "> (b/d/r/u/f/v/t/e): " choice
+        read -p "> (1-9): " choice
         case "$choice" in
-        1) runjob doas /bin/bash ;;
+        1) runjob doas ;;
         2) runjob bash ;;
         3) runjob /usr/bin/crosh.old ;;
         4) runjob powerwash ;;
