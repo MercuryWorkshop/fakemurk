@@ -7,10 +7,14 @@ traps() {
 }
 config() {
     swallow_stdin
-    read -p "Would you like to enable rootfs restore? It will add an option to quickly revert all changes and re-enroll, at the cost of ~6G of storage space (Y/n): " restore_choice
+    read -p "Would you like to enable rootfs restore? It will add an option to quickly revert all changes and re-enroll, but will take ~7 extra minutes" restore_choice
     case "$restore_choice" in
     Y | y) ROOTFS_BACKUP=1 ;;
     esac
+}
+disable_rootfs_backup() {
+    echo "rootfs verification is disabled for this partition, and thus it is not eligable for backup. ignoring..."
+    ROOTFS_BACKUP=0
 }
 
 swallow_stdin() {
@@ -219,16 +223,6 @@ enable_autoenrollment() {
 }
 
 fakemurk() {
-    # if [ "$ROOTFS_BACKUP" == "1" ]; then
-    #     touch $ROOT/sbin/init 2>/dev/null
-    #     if [ $? -eq 1 ]; then
-    #         echo "staging rootfs backup"
-    #         touch $ROOT/fakemurk_trigger_backup
-    #     else
-    #         echo "rootfs verification is disabled for this partition, and thus it is not eligable for backup. ignoring..."
-    #         ROOTFS_BACKUP=0
-    #     fi
-    # fi
     touch $ROOT/sbin/init 2>/dev/null || disable_verity
     echo "disabling autoupdates"
     disable_autoupdates
@@ -260,7 +254,7 @@ main() {
     fakemurk_info
     config
 
-    DST=$(get_fixed_dst_drive)
+    DST=/dev/$(get_largest_nvme_namespace)
     if [ -z $DST ]; then
         DST=/dev/mmcblk0
     fi
@@ -283,7 +277,7 @@ main() {
         sleep 3
         ROOT=/mntb
         ROOTBLK=${DST}p5
-        mount ${DST}p5 /mntb >/dev/null 2>&1 || disable_verity
+        mount "${DST}p5" /mntb >/dev/null 2>&1 || disable_verity
         fakemurk
         sync
         if [ "$COMPAT" == "1" ]; then
@@ -293,6 +287,19 @@ main() {
         umount /mnta
         umount /mntb
     else
+        if [ "$ROOTFS_BACKUP" == "1" ]; then
+            touch "$ROOT/sbin/init" 2>/dev/null
+            if [ $? -eq 1 ]; then
+                echo "staging rootfs backup"
+                ROOTDEV=$(rootdev)
+                cgpt add "$DST" -i 2 -P 1
+                cgpt show -n "$DST" -i 2 -P
+
+            else
+                :
+            fi
+        fi
+
         fakemurk
     fi
 
@@ -307,7 +314,7 @@ main() {
     exit
 
 }
-
+# shellcheck disable=SC2128
 if [ "$0" = "$BASH_SOURCE" ]; then
     stty sane
     # if [ "$SHELL" != "/bin/bash" ]; then

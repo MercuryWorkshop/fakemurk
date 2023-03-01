@@ -5,14 +5,22 @@ exec 2>/fakemurk_startup_err
 chmod 644 /fakemurk_startup_log /fakemurk_startup_err
 
 . /usr/share/misc/chromeos-common.sh
-DST=$(get_fixed_dst_drive)
+DST=/dev/$(get_largest_nvme_namespace)
 if [ -z $DST ]; then
     DST=/dev/mmcblk0
 fi
+
+# we stage sshd and mkfs as a one time operation in startup instead of in the bootstrap script
+# this is because ssh-keygen was introduced somewhere around R80, where many shims are still stuck on R73
+# filesystem unfuck can only be done before stateful is mounted, which is perfectly fine in a shim but not if you run it while booted
+# because mkfs is mean and refuses to let us format
+
+# note that this will lead to confusing behaviour, since it will appear as if it crashed as a result of fakemurk
+
 if [ ! -f /sshd_staged ]; then
 
-    echo "staging sshd"
     # thanks rory! <3
+    echo "staging sshd"
     mkdir -p $ROOT/ssh/root
     chmod -R 777 $ROOT/ssh/root
 

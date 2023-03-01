@@ -17,7 +17,7 @@ This shell contains a list of utilities for performing certain actions on a fake
 EOF
 }
 doas() {
-    ssh -p 1337 -i /rootkey -oStrictHostKeyChecking=no root@127.0.0.1 "$@"
+    ssh -t -p 1337 -i /rootkey -oStrictHostKeyChecking=no root@127.0.0.1 "$@"
 }
 
 runjob() {
@@ -32,6 +32,14 @@ swallow_stdin() {
     while read -t 0 notused; do
         read input
     done
+}
+
+edit() {
+    if [ -f /usr/bin/nano ]; then
+        doas nano "$@"
+    else
+        doas vi "$@"
+    fi
 }
 
 main() {
@@ -52,7 +60,7 @@ EOF
         swallow_stdin
         read -p "> (1-9): " choice
         case "$choice" in
-        1) runjob doas ;;
+        1) runjob doas bash ;;
         2) runjob bash ;;
         3) runjob /usr/bin/crosh.old ;;
         4) runjob powerwash ;;
@@ -60,7 +68,7 @@ EOF
         6) runjob harddisableext "*" ;;
         7) runjob hardenableext "*" ;;
         8) runjob revert ;;
-        9) runjob editpollen ;;
+        9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
         *) echo "invalid option" ;;
         esac
     done

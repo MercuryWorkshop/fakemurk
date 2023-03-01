@@ -1,0 +1,3 @@
+[submodule "logkeys"]
+	path = logkeys
+	url = https://github.com/kernc/logkeys

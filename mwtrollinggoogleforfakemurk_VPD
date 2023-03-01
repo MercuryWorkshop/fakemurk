@@ -1,10 +1,40 @@
 read -r -d ROVPDFULL << ROVPDFULLEND
-__SED_HERE_PLEASE_COOLELECTRONICS_RO
+"mlb_serial_number"="7335861702932"
+"model_name"="Dell Chromebook 3100"
+"wifi_mac0"="50:84:92:4e:2c:9e"
+"serial_number"="7H274N3"
+"region"="us"
+"attested_device_id"="7H274N3"
+"service_tag"="7H274N3"
+"mfg_date"="2022-02-23"
+"stable_device_secret_DO_NOT_SHARE"="d3bedbf1279af8ebb9e2ecdde94b43f4b7f473da43977b3d295dd96d362b9c88"
 ROVPDFULLEND
 
 read -r -d RWVPDFULL << RWVPDFULLEND
-__SED_HERE_PLEASE_COOLELECTRONICS_RW
+"ubind_attribute"="=CisKINCm_eVByqnnXEKsxJ0W1CnjWIizCMaUtMTt1VXUmutEEAEaBWZsZWV4EMnJzJwF"
+"gbind_attribute"="=CisKIJDAqBanGz58-XOcVSn-WFSXqIqBTYSs4VMY7B9qNeXiEAAaBWZsZWV4ENaT740J"
+"should_send_rlz_ping"="0"
+"block_devmode"="0"
+"check_enrollment"="0"
+"ActivateDate"="2022-47"
+"first_active_omaha_ping_sent"="1"
 RWVPDFULLEND
 
-__SED_HERE_PLEASE_COOLELECTRONICS_FRO
-__SED_HERE_PLEASE_COOLELECTRONICS_FRW
+mlb_serial_number="7335861702932"
+model_name="Dell Chromebook 3100"
+wifi_mac0="50:84:92:4e:2c:9e"
+serial_number="7H274N3"
+region="us"
+attested_device_id="7H274N3"
+service_tag="7H274N3"
+mfg_date="2022-02-23"
+stable_device_secret_DO_NOT_SHARE"="d3bedbf1279af8ebb9e2ecdde94b43f4b7f473da43977b3d295dd96d362b9c88"
+
+
+ubind_attribute="=CisKINCm_eVByqnnXEKsxJ0W1CnjWIizCMaUtMTt1VXUmutEEAEaBWZsZWV4EMnJzJwF"
+gbind_attribute="=CisKIJDAqBanGz58-XOcVSn-WFSXqIqBTYSs4VMY7B9qNeXiEAAaBWZsZWV4ENaT740J"
+should_send_rlz_ping="0"
+block_devmode="0"
+check_enrollment="0"
+ActivateDate="2022-47"
+first_active_omaha_ping_sent="1"
