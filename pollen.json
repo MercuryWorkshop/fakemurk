@@ -22,5 +22,5 @@
     "ReportDeviceOsUpdateStatus": false,
     "VpnConfigAllowed": true,
     "UnaffiliatedArcAllowed": true,
-    "AllowedDomainsForApps": "addyourschooldomain.edu,consumer_accounts"
+    "AllowedDomainsForApps": "__SED_REPLACEME_SCHOOL_EMAIL__,consumer_accounts"
 }

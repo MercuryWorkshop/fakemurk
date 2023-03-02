@@ -229,7 +229,20 @@ move_bin() {
 }
 
 is_target_booted() {
-    [ -z "$COMPAT" ] && [ "$TGT_ROOT_DEV" == "$ROOTDEV" ]
+    [ -z "$COMPAT" ] && [ "$(get_booted_kernnum)" == "$TGT_KERNNUM" ]
+}
+opposite_num() {
+    if [ "$1" == "2" ]; then
+        echo -n 4
+    elif [ "$1" == "4" ]; then
+        echo -n 2
+    elif [ "$1" == "3" ]; then
+        echo -n 5
+    elif [ "$1" == "5" ]; then
+        echo -n 3
+    else
+        return 1
+    fi
 }
 
 disable_autoupdates() {
@@ -254,6 +267,7 @@ EOF
             swallow_stdin
             read -r
             reboot
+            leave
         fi
     fi
 
@@ -269,7 +283,13 @@ EOF
 verity_enabled_for_n() {
     grep -q "root=/dev/dm" <"${DST}p${1}"
 }
-
+get_booted_kernnum() {
+    if (($(cgpt show -n "$DST" -i 2 -P) > $(cgpt show -n "$DST" -i 4 -P))); then
+        echo -n 2
+    else
+        echo -n 4
+    fi
+}
 cleanup() {
 
     if [ "$COMPAT" == "1" ]; then
@@ -295,30 +315,40 @@ configure_target() {
     fi
 
     if verity_enabled_for_n 2 && verity_enabled_for_n 4; then
-        :
+        TGT_KERNNUM=
     elif verity_enabled_for_n 2; then
         TGT_KERNNUM=4
     elif verity_enabled_for_n 4; then
         TGT_KERNNUM=2
     else
+        TGT_KERNNUM=
         if [ "$ROOTFS_BACKUP" == "1" ]; then
             echo "Rootfs restore is requested to be enabled, but both partitions have rootfs verification disabled. Please go through the recovery process to enable rootfs verification or run again and do not choose to enable rootfs restore."
             leave
         fi
     fi
 
-    if [ -z "$TGT_KERNNUM" ]; then
+    if [ "$TGT_KERNNUM" != "2" ] && [ "$TGT_KERNNUM" != "4" ]; then
         if [ "$COMPAT" == "1" ]; then
             TGT_KERNNUM=2
-            # 2 is the default simply because it's easier
         else
-            ROOTDEV=$(rootdev)
-            TGT_KERNNUM=${ROOTDEV:(-1)}
+            TGT_KERNNUM=$(opposite_num "$(get_booted_kernnum)")
         fi
     fi
     TGT_ROOTNUM=$((TGT_KERNNUM + 1))
     TGT_KERN_DEV="${DST}p$TGT_KERNNUM"
     TGT_ROOT_DEV="${DST}p$TGT_ROOTNUM"
+
+    ALT_ROOTNUM=$(opposite_num "$TGT_ROOTNUM")
+    ALT_KERNNUM=$(opposite_num "$TGT_KERNNUM")
+    ALT_KERN_DEV="${DST}p$ALT_KERNNUM"
+    ALT_ROOT_DEV="${DST}p$ALT_ROOTNUM"
+
+    echo "target kern is $TGT_KERNNUM@$TGT_KERN_DEV"
+    echo "target root is $TGT_ROOTNUM@$TGT_ROOT_DEV"
+    echo
+    echo "backup kern is $ALT_KERNNUM@$ALT_KERN_DEV"
+    echo "backup root is $ALT_ROOTNUM@$ALT_ROOT_DEV"
 }
 
 patch_root() {

@@ -27,6 +27,7 @@ if [ ! -f /sshd_staged ]; then
     ssh-keygen -f /ssh/root/key -N '' -t rsa >/dev/null
     cp /ssh/root/key /rootkey
     chmod 600 /ssh/root
+    chmod 644 /ssh/rootkey
 
     cat >/ssh/config <<-EOF
 AuthorizedKeysFile /ssh/%u/key.pub
