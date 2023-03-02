@@ -36,4 +36,8 @@ Thats it!
 
 ## How it works
 
-fucky crossystem.sh stuff it's reallly cool
+All crossystem libraries in CrOS depend on `crossystem.sh`, so we simply replace it with our own version that says all the firmware values are normal, when in reality they're set to fucky devmode shit behind the scenes. This allows "verified" boot with developer mode, in a limbo state where the firmware thinks we're in developer mode but our copy of `crossystem.sh` lies to CrOS and it thinks we're in verified mode, allowing for normal enrollment.
+
+This limbo state, however, comes with strings attached. As the OS thinks we're in verified mode, typing `shell` into crosh does not work. Luckily, since the firmware is in developer mode, we can disable verity and replace crosh with our own file. This is where mush comes into play.
+
+mush is a drop-in replacement for crosh, offering various utilites such as a shell and more. mush is what really ties fakemurk together, making it more than just developer mode on verified boot. With mush, you have full OS control without leaving CrOS. This effectively means you are in a pseudo developer mode, where as far as the OS is concerned everything is normal, but you have full behind-the-scenes shell access.
