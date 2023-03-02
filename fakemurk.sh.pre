@@ -44,7 +44,11 @@ traps() {
     trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
     trap 'echo "\"${last_command}\" command failed with exit code $?. THIS IS A BUG, REPORT IT HERE https://github.com/MercuryWorkshop/fakemurk"' EXIT
 }
-
+leave() {
+    trap - EXIT
+    echo "exiting successfully"
+    exit
+}
 config() {
     swallow_stdin
     read -r -p "Would you like to enable rootfs restore? It will add an option to quickly revert all changes and re-enroll. (Y/n)" choice
@@ -89,7 +93,7 @@ csys() {
     if [ "$COMPAT" == "1" ]; then
         crossystem "$@"
     elif test -f "$ROOT/usr/bin/crossystem.old"; then
-        "ROOT/usr/bin/crossystem.old" "$@"
+        "$ROOT/usr/bin/crossystem.old" "$@"
     else
         "$ROOT/usr/bin/crossystem" "$@"
     fi
@@ -224,43 +228,100 @@ move_bin() {
     fi
 }
 
+is_target_booted() {
+    [ -z "$COMPAT" ] && [ "$TGT_ROOT_DEV" == "$ROOTDEV" ]
+}
+
 disable_autoupdates() {
     # thanks phene i guess?
     sed -i "$ROOT/etc/lsb-release" -e "s/CHROMEOS_AUSERVER=.*/CHROMEOS_AUSERVER=$(sed_escape "https://mercurywork.shop/update")/"
 }
 
-disable_verity() {
+prepare_target_root() {
     sleep 2
-    echo "ROOTFS VERIFICATION IS ON! IT WILL NOW BE REMOVED"
-    if [ "$COMPAT" == "1" ]; then
-        umount $ROOT || :
-        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification -i $DST 2>/dev/null
-        mount $ROOTBLK $ROOT
-        sleep 2
-        echo "ROOTFS VERIFICATION SUCCESSFULLY REMOVED"
-    else
-        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 2 -i $DST 2>/dev/null
-        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions 4 -i $DST 2>/dev/null
-        cat <<-EOF
+    if verity_enabled_for_n "$TGT_KERNNUM"; then
+        echo "removing rootfs verification on target kernel $TGT_KERN_DEV"
+        /usr/share/vboot/bin/make_dev_ssd.sh --remove_rootfs_verification --partitions "$TGT_KERNNUM" -i "$DST" 2>/dev/null
+        if is_target_booted; then
+            # if we're booted from the target kernel, we need to reboot. this is a pretty rare circumstance
+
+            cat <<-EOF
 ROOTFS VERIFICATION SUCCESSFULLY REMOVED
 IN ORDER TO PROCCEED, THE CHROMEBOOK MUST BE REBOOTED
 
 PRESS ENTER TO REBOOT, THEN ONCE BOOTED RUN THIS SCRIPT AGAIN
 EOF
-        swallow_stdin
-        read -r
-        reboot
+            swallow_stdin
+            read -r
+            reboot
+        fi
+    fi
+
+    if ! is_target_booted; then
+        mkdir /tmp/rootmnt
+        mount "$TGT_ROOT_DEV" /tmp/rootmnt
+        ROOT=/tmp/rootmnt
+    else
+        ROOT=
     fi
 }
 
-enable_autoenrollment() {
+verity_enabled_for_n() {
+    grep -q "root=/dev/dm" <"${DST}p${1}"
+}
+
+cleanup() {
+
+    if [ "$COMPAT" == "1" ]; then
+        echo "pressure washing..."
+        yes | mkfs.ext4 "${DST}p1" >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
+    fi
+
     cvpd -i RW_VPD -s check_enrollment=1 2>/dev/null
     cvpd -i RW_VPD -s block_devmode=0 2>/dev/null
     csys block_devmode=0 2>/dev/null
 }
 
-fakemurk() {
-    touch "$ROOT/sbin/init" 2>/dev/null || disable_verity
+set_kernel_priority() {
+    cgpt add "$DST" -i 4 -P 0
+    cgpt add "$DST" -i 2 -P 0
+    cgpt add "$DST" -i "$TGT_KERNNUM" -P 1
+}
+
+configure_target() {
+    DST=/dev/$(get_largest_nvme_namespace)
+    if [ "$DST" == "/dev/" ]; then
+        DST=/dev/mmcblk0
+    fi
+
+    if verity_enabled_for_n 2 && verity_enabled_for_n 4; then
+        :
+    elif verity_enabled_for_n 2; then
+        TGT_KERNNUM=4
+    elif verity_enabled_for_n 4; then
+        TGT_KERNNUM=2
+    else
+        if [ "$ROOTFS_BACKUP" == "1" ]; then
+            echo "Rootfs restore is requested to be enabled, but both partitions have rootfs verification disabled. Please go through the recovery process to enable rootfs verification or run again and do not choose to enable rootfs restore."
+            leave
+        fi
+    fi
+
+    if [ -z "$TGT_KERNNUM" ]; then
+        if [ "$COMPAT" == "1" ]; then
+            TGT_KERNNUM=2
+            # 2 is the default simply because it's easier
+        else
+            ROOTDEV=$(rootdev)
+            TGT_KERNNUM=${ROOTDEV:(-1)}
+        fi
+    fi
+    TGT_ROOTNUM=$((TGT_KERNNUM + 1))
+    TGT_KERN_DEV="${DST}p$TGT_KERNNUM"
+    TGT_ROOT_DEV="${DST}p$TGT_ROOTNUM"
+}
+
+patch_root() {
     echo "disabling autoupdates"
     disable_autoupdates
     sleep 2
@@ -292,67 +353,43 @@ main() {
     fakemurk_info
     config
 
-    DST=/dev/$(get_largest_nvme_namespace)
-    if [ "$DST" == "/dev/" ]; then
-        DST=/dev/mmcblk0
-    fi
-
-    KERNA_ACTIVE=$(cgpt show -n "$DST" -i 2 -P)
-    KERNB_ACTIVE=$(cgpt show -n "$DST" -i 4 -P)
-    # if []
-
     if csys mainfw_type?recovery; then
         echo "Entering shim compatability mode"
         COMPAT=1
         stty sane
-        # stops the weird input stuff
-
-        sleep 3
-        mkdir /mnta >/dev/null 2>&1 || :
-        mkdir /mntb >/dev/null 2>&1 || :
-
-        ROOT=/mnta
-        ROOTBLK=${DST}p3
-        mount "${DST}p3" /mnta >/dev/null 2>&1 || disable_verity
-        fakemurk
-        echo "murking alternative root"
-        sleep 3
-        ROOT=/mntb
-        ROOTBLK=${DST}p5
-        mount "${DST}p5" /mntb >/dev/null 2>&1 || disable_verity
-        fakemurk
-        sync
-        if [ "$COMPAT" == "1" ]; then
-            echo "pressure washing..."
-            yes | mkfs.ext4 "${DST}p1" >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
-        fi
-        umount /mnta
-        umount /mntb
-    else
-        if [ "$ROOTFS_BACKUP" == "1" ]; then
-            touch "$ROOT/sbin/init" 2>/dev/null
-            if [ $? -eq 1 ]; then
-                echo "staging rootfs backup"
-                ROOTDEV=$(rootdev)
-                cgpt add "$DST" -i 2 -P 1
-
-            else
-                :
-            fi
-        fi
-
-        fakemurk
+        sleep 1
     fi
 
-    echo "cleaning up"
-    enable_autoenrollment
+    echo "----- stage 1: grabbing disk configuration -----"
+    configure_target
+
+    sleep 2
+
+    echo "----- stage 2: patching target rootfs -----"
+    prepare_target_root
+    patch_root
+    sync
+
+    sleep 2
+
+    echo "----- stage 3: cleaning up -----"
+
+    if [ "$COMPAT" == "1" ]; then
+        echo "pressure washing..."
+        yes | mkfs.ext4 "${DST}p1" >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
+    fi
+    cleanup
+    sleep 1
+    echo "setting kernel priority"
+    set_kernel_priority
+
+    sleep 1
     echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
     swallow_stdin
     read -r
     sync
     reboot
-    trap - EXIT
-    exit
+    leave
 
 }
 if [ "$0" = "$BASH_SOURCE" ]; then
