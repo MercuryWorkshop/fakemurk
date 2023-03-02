@@ -10,13 +10,17 @@
     "LacrosAvailability": "user_choice",
     "LacrosSecondaryProfilesAllowed": true,
     "SystemFeaturesDisableList": [],
-    "ArcPolicy": {},
     "ArcEnabled": true,
     "LidCloseAction": 3,
     "AllowDinosaurEasterEgg": true,
-    "DnsOverHttpsMode": true,
+    "DnsOverHttpsMode": "among us",
     "SystemTerminalSshAllowed": true,
     "ExtensionInstallBlockList": [],
     "VirtualMachinesAllowed": true,
-    "CrostiniAllowed": true
+    "CrostiniAllowed": true,
+    "ReportCrostiniUsageEnabled": false,
+    "ReportDeviceOsUpdateStatus": false,
+    "VpnConfigAllowed": true,
+    "UnaffiliatedArcAllowed": true,
+    "AllowedDomainsForApps": "addyourschooldomain.edu,consumer_accounts"
 }
