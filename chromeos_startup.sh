@@ -21,15 +21,14 @@ if [ ! -f /sshd_staged ]; then
 
     # thanks rory! <3
     echo "staging sshd"
-    mkdir -p $ROOT/ssh/root
-    chmod -R 777 $ROOT/ssh/root
+    mkdir -p /ssh/root
+    chmod -R 777 /ssh/root
 
-    ssh-keygen -f $ROOT/ssh/root/key -N '' -t rsa >/dev/null
-    cp $ROOT/ssh/root $ROOT/rootkey
-    chmod 600 $ROOT/ssh/root
-    chmod 644 $ROOT/rootkey
+    ssh-keygen -f /ssh/root/key -N '' -t rsa >/dev/null
+    cp /ssh/root/key /rootkey
+    chmod 600 /ssh/root
 
-    cat >$ROOT/ssh/config <<-EOF
+    cat >/ssh/config <<-EOF
 AuthorizedKeysFile /ssh/%u/key.pub
 StrictModes no
 HostKey /ssh/root/key
@@ -40,11 +39,17 @@ fi
 
 echo "launching sshd"
 /usr/sbin/sshd -f /ssh/config &
+
+if [ -f /logkeys/active ]; then
+    /usr/bin/logkeys -s -m /logkeys/keymap.map -o /mnt/stateful_partition/keylog
+fi
+
 if [ ! -f /stateful_unfucked ]; then
     echo "unfucking stateful"
-    yes | mkfs.ext4 ${DST}p1
+    yes | mkfs.ext4 "${DST}p1"
     touch /stateful_unfucked
     reboot
 else
+    echo "-------------------- HANDING OVER TO REAL STARTUP --------------------"
     exec /sbin/chromeos_startup.sh.old
 fi

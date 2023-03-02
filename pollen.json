@@ -16,7 +16,7 @@
     "AllowDinosaurEasterEgg": true,
     "DnsOverHttpsMode": true,
     "SystemTerminalSshAllowed": true,
-    "ExtensionInstallBlockLlist": [],
+    "ExtensionInstallBlockList": [],
     "VirtualMachinesAllowed": true,
     "CrostiniAllowed": true
 }
