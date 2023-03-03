@@ -51,6 +51,14 @@ leave() {
 }
 config() {
     swallow_stdin
+
+    echo "please enter the your managed email's domain. example: if your email is \"randomstudent@skid.edu\" then you will enter skid.edu"
+    echo "if you don't enter it correctly you won't be able to login, double check this"
+    read -r -p "> " EMAIL
+    echo
+
+    swallow_stdin
+    echo
     read -r -p "Would you like to enable rootfs restore? It will add an option to quickly revert all changes and re-enroll. (Y/n)" choice
     case "$choice" in
     N | n | no | No | NO) ROOTFS_BACKUP=0 ;;
@@ -159,9 +167,6 @@ drop_crossystem_sh() {
     chmod 777 "$ROOT/usr/bin/crossystem"
 }
 drop_pollen() {
-    echo "please enter the your managed email's domain. example: if your email is \"randomstudent@skid.edu\" then you will enter skid.edu"
-    echo "if you don't enter it correctly you won't be able to login, double check this"
-    read -r -p "> " EMAIL
     mkdir -p "$ROOT/etc/opt/chrome/policies/managed"
     raw_pollen | sed -e "s/__SED_REPLACEME_SCHOOL_EMAIL__/${EMAIL}/g" >$ROOT/etc/opt/chrome/policies/managed/policy.json
     chmod 777 "$ROOT/etc/opt/chrome/policies/managed/policy.json"
@@ -285,7 +290,20 @@ EOF
         ROOT=
     fi
 }
+get_largest_nvme_namespace() {
+    local largest size tmp_size dev
+    size=0
+    dev=$(basename "$1")
 
+    for nvme in /sys/block/"${dev%n*}"*; do
+        tmp_size=$(cat "${nvme}"/size)
+        if [ "${tmp_size}" -gt "${size}" ]; then
+            largest="${nvme##*/}"
+            size="${tmp_size}"
+        fi
+    done
+    echo "${largest}"
+}
 verity_enabled_for_n() {
     grep -q "root=/dev/dm" <"${DST}p${1}"
 }

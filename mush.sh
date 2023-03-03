@@ -57,8 +57,11 @@ main() {
 (8) Emergency Revert & Re-Enroll
 (9) Edit Pollen
 EOF
+        if ! test -f /mnt/stateful_partition/crouton; then
+            echo "(10) Install Crouton"
+        fi
         swallow_stdin
-        read -p "> (1-9): " choice
+        read -r -p "> (1-11): " choice
         case "$choice" in
         1) runjob doas bash ;;
         2) runjob bash ;;
@@ -69,6 +72,8 @@ EOF
         7) runjob hardenableext "*" ;;
         8) runjob revert ;;
         9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
+        10) runjob install_crouton ;;
+        11) runjob prepare_crostini ;;
         *) echo "invalid option" ;;
         esac
     done
@@ -117,29 +122,26 @@ revert() {
     sleep 1000
 }
 harddisableext() { # calling it "hard disable" because it only reenables when you press
-    if [ ! -d "/home/chronos/.extstore" ]; then
-        mkdir /home/chronos/.extstore
-    fi
-    mv /home/chronos/user/Extensions/$1 /home/chronos/.extstore/
-    chmod 000 /home/chronos/user/Extensions/$1
-
-    doas restart ui
+    read -r -p "enter extension id>" extid
+    chmod 000 "/home/chronos/user/Extensions/$extid"
+    kill -9 $(pgrep -f "\-\-extension\-process")
 }
 
 hardenableext() {
-    chmod 777 /home/chronos/user/Extensions/$1
-    mv /home/chronos/.extstore/$1 /home/chronos/user/Extensions/$1
-
-    doas restart ui
+    read -r -p "enter extension id>" extid
+    chmod 777 "/home/chronos/user/Extensions/$extid"
+    kill -9 $(pgrep -f "\-\-extension\-process")
 }
 
 softdisableext() {
     echo "Extensions will stay disabled until you press Ctrl+c or close this tab"
     while true; do
-        kill -9 $(pgrep -f "\-\-extension\-process")
+        kill -9 $(pgrep -f "\-\-extension\-process") 2>/dev/null
     done
 }
-
+install_crouton() {
+    curl -SLk https://goo.gl/fd3zc | doas bash -t xfce && touch /mnt/stateful_partition/crouton
+}
 if [ "$0" = "$BASH_SOURCE" ]; then
     stty sane
     main

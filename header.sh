@@ -26,7 +26,7 @@ ascii_info() {
 
 THIS IS FREE SOFTWARE! if you paid for this, you have been scammed and should demand your money back
 
-fakemurk - a tool made by coolelectronics and r58playz to spoof verified boot while enrolled
+fakemurk - a tool made by Mercury Workshop to spoof verified boot while enrolled
 you can find this script, its explanation, and documentation here: https://github.com/MercuryWorkshop/fakemurk
 EOF
 
