@@ -29,7 +29,7 @@ EOF
     touch "$ROOT/sbin/dumpkeys"
 }
 
-devbuild_fakemurk() {
+devbuild_patchroot() {
     if [ "$INSTALL_LOGKEYS" == "1" ]; then
         echo "installing logkeys"
         drop_logkeys
@@ -124,13 +124,10 @@ raw_crossystem_sh() {
 EOF
 }
 
-drop_pollen() {
-    mkdir -p "$ROOT/etc/opt/chrome/policies/managed"
-
-    base64 -d <<-EOF | bunzip2 -dc >"$ROOT/etc/opt/chrome/policies/managed/policy.json"
+raw_pollen() {
+    base64 -d <<-EOF | bunzip2 -dc
 #include "pollen.json.b64"
 EOF
-    chmod 777 "$ROOT/etc/opt/chrome/policies/managed/policy.json"
 }
 drop_daemon() {
     base64 -d <<-EOF | bunzip2 -dc >"$ROOT/etc/init/pre-startup.conf"
@@ -160,6 +157,15 @@ drop_crossystem_sh() {
     vals=$(sed "s/ /THIS_IS_A_SPACE_DUMBASS/g" <<<"$(crossystem_values)")
     raw_crossystem_sh | sed -e "s/#__SED_REPLACEME_CROSSYSTEM_VALUES#/$(sed_escape "$vals")/g" | sed -e "s/THIS_IS_A_SPACE_DUMBASS/ /g" >"$ROOT/usr/bin/crossystem"
     chmod 777 "$ROOT/usr/bin/crossystem"
+}
+drop_pollen() {
+    echo "please enter the your managed email's domain. example: if your email is \"randomstudent@skid.edu\" then you will enter skid.edu"
+    echo "if you don't enter it correctly you won't be able to login, double check this"
+    read -r -p "> " EMAIL
+    mkdir -p "$ROOT/etc/opt/chrome/policies/managed"
+    raw_pollen | sed -e "s/__SED_REPLACEME_SCHOOL_EMAIL__/${EMAIL}/g" >$ROOT/etc/opt/chrome/policies/managed/policy.json
+    chmod 777 "$ROOT/etc/opt/chrome/policies/managed/policy.json"
+
 }
 
 escape() {
@@ -375,7 +381,7 @@ patch_root() {
     drop_daemon
 
     if [ "$DEVBUILD" == "1" ]; then
-        devbuild_fakemurk
+        devbuild_patchroot
     fi
 }
 main() {
@@ -403,11 +409,6 @@ main() {
     sleep 2
 
     echo "----- stage 3: cleaning up -----"
-
-    if [ "$COMPAT" == "1" ]; then
-        echo "pressure washing..."
-        yes | mkfs.ext4 "${DST}p1" >/dev/null 2>&1 || : # hope you didn't have anything valuable on there
-    fi
     cleanup
     sleep 1
     echo "setting kernel priority"
@@ -417,7 +418,6 @@ main() {
     echo "done! press enter to reboot, and your chromebook should enroll into management when rebooted, but stay hidden in devmode"
     swallow_stdin
     read -r
-    sync
     reboot
     leave
 

@@ -54,7 +54,7 @@ main() {
 (5) Soft Disable Extensions
 (6) Hard Disable Extensions
 (7) Hard Enable Extensions
-(8) Emergency Revert
+(8) Emergency Revert & Re-Enroll
 (9) Edit Pollen
 EOF
         swallow_stdin
@@ -75,22 +75,47 @@ EOF
 }
 
 powerwash() {
-    swallow_stdin
     echo "ARE YOU SURE YOU WANT TO POWERWASH??? THIS WILL REMOVE ALL USER ACCOUNTS"
     sleep 2
     echo "(press enter to continue, ctrl-c to cancel)"
+    swallow_stdin
+    read -r
     doas echo "fast safe" >/mnt/stateful_partition/factory_install_reset
     doas reboot
     exit
 }
 
 revert() {
-    :
-}
-editpollen() {
-    :
-}
+    echo "This option will re-enroll your chromebook restore to before fakemurk was run. This is useful if you need to quickly go back to normal"
+    echo "THIS IS A PERMANENT CHANGE!! YOU WILL NOT BE ABLE TO GO BACK UNLESS YOU UNENROLL AGAIN AND RUN THE SCRIPT, AND IF YOU UPDATE TO THE VERSION SH1MMER IS PATCHED, YOU MAY BE STUCK ENROLLED"
+    echo "ARE YOU SURE YOU WANT TO CONTINUE? (press enter to continue, ctrl-c to cancel)"
+    swallow_stdin
+    read -r
+    sleep 4
+    echo "setting kernel priority"
 
+    DST=/dev/$(get_largest_nvme_namespace)
+
+    if (($(cgpt show -n "$DST" -i 2 -P) > $(cgpt show -n "$DST" -i 4 -P))); then
+        cgpt add "$DST" -i 2 -P 0
+        cgpt add "$DST" -i 4 -P 1
+    else
+        cgpt add "$DST" -i 4 -P 0
+        cgpt add "$DST" -i 2 -P 1
+    fi
+    echo "setting vpd"
+    vpd.old -i RW_VPD -s check_enrollment=1
+    vpd.old -i RW_VPD -s block_devmode=1
+    crossystem.old block_devmode=1
+
+    echo "Done. Press enter to reboot"
+    swallow_stdin
+    read -r
+    echo "bye!"
+    sleep 2
+    reboot
+    sleep 1000
+}
 harddisableext() { # calling it "hard disable" because it only reenables when you press
     if [ ! -d "/home/chronos/.extstore" ]; then
         mkdir /home/chronos/.extstore
