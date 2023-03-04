@@ -44,7 +44,7 @@ Do everything it tells you to, and your chromebook will reboot.
 
 ### READ THIS IT IS IMPORTANT!!!
 
-If you simply press ctrl-d on the devmode screen and proceed as normal, there's a good chance you'll be stuck on the "enrolling device" screen forever. What you want to do is press space to proceed, and then press refresh+power. This will result in a "Chrome OS is missing or damaged" screen. THIS IS SUPPOSED TO HAPPEN!. Press escape+refresh+power, then ctrl+d and enter to enable devmode. When you get back to the "OS verification screen" press Ctrl-D to boot.
+If you simply press ctrl-d on the devmode screen and proceed as normal, there's a good chance you'll be stuck on the "enrolling device" screen forever. What you want to do is press space to **disable devmode**, and then press refresh+power. This will result in a "Chrome OS is missing or damaged" screen. THIS IS SUPPOSED TO HAPPEN!. Press escape+refresh+power, then ctrl+d and enter to enable devmode. When you get back to the "OS verification screen" press Ctrl-D to boot.
 
 (note that if you have a "dedede" chromebook, the steps for enabling and disabling devmode are slightly different but you should already know or know how to google)
 
