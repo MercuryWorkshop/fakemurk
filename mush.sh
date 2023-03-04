@@ -116,7 +116,7 @@ revert() {
 
     DST=/dev/$(get_largest_nvme_namespace)
 
-    if (($(doas cgpt show -n "$DST" -i 2 -P) > $(doas cgpt show -n "$DST" -i 4 -P))); then
+    if doas "(($(cgpt show -n "$DST" -i 2 -P) > $(cgpt show -n "$DST" -i 4 -P)))"; then
         doas cgpt add "$DST" -i 2 -P 0
         doas cgpt add "$DST" -i 4 -P 1
     else
