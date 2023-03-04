@@ -68,12 +68,11 @@ EOF
         3) runjob /usr/bin/crosh.old ;;
         4) runjob powerwash ;;
         5) runjob softdisableext ;;
-        6) runjob harddisableext "*" ;;
-        7) runjob hardenableext "*" ;;
+        6) runjob harddisableext ;;
+        7) runjob hardenableext ;;
         8) runjob revert ;;
         9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
         10) runjob install_crouton ;;
-        11) runjob prepare_crostini ;;
         *) echo "invalid option" ;;
         esac
     done
@@ -140,7 +139,7 @@ softdisableext() {
     done
 }
 install_crouton() {
-    curl -SLk https://goo.gl/fd3zc | doas bash -t xfce && touch /mnt/stateful_partition/crouton
+    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce" && touch /mnt/stateful_partition/crouton
 }
 if [ "$0" = "$BASH_SOURCE" ]; then
     stty sane

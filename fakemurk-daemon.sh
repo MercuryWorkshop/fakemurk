@@ -17,3 +17,11 @@
         done
     } &
 } &
+
+{
+    while true; do
+        if test -d "/home/chronos/user/Downloads/disable-extensions"; then
+            kill -9 $(pgrep -f "\-\-extension\-process") 2>/dev/null
+        fi
+    done
+} &
