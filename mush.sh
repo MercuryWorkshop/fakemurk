@@ -1,5 +1,21 @@
 #!/bin/bash
 
+get_largest_nvme_namespace() {
+    # this function doesn't exist if the version is old enough, so we redefine it
+    local largest size tmp_size dev
+    size=0
+    dev=$(basename "$1")
+
+    for nvme in /sys/block/"${dev%n*}"*; do
+        tmp_size=$(cat "${nvme}"/size)
+        if [ "${tmp_size}" -gt "${size}" ]; then
+            largest="${nvme##*/}"
+            size="${tmp_size}"
+        fi
+    done
+    echo "${largest}"
+}
+
 traps() {
     set +e
     trap 'last_command=$current_command; current_command=$BASH_COMMAND' DEBUG
@@ -100,24 +116,24 @@ revert() {
 
     DST=/dev/$(get_largest_nvme_namespace)
 
-    if (($(cgpt show -n "$DST" -i 2 -P) > $(cgpt show -n "$DST" -i 4 -P))); then
-        cgpt add "$DST" -i 2 -P 0
-        cgpt add "$DST" -i 4 -P 1
+    if (($(doas cgpt show -n "$DST" -i 2 -P) > $(doas cgpt show -n "$DST" -i 4 -P))); then
+        doas cgpt add "$DST" -i 2 -P 0
+        doas cgpt add "$DST" -i 4 -P 1
     else
-        cgpt add "$DST" -i 4 -P 0
-        cgpt add "$DST" -i 2 -P 1
+        doas cgpt add "$DST" -i 4 -P 0
+        doas cgpt add "$DST" -i 2 -P 1
     fi
     echo "setting vpd"
-    vpd.old -i RW_VPD -s check_enrollment=1
-    vpd.old -i RW_VPD -s block_devmode=1
-    crossystem.old block_devmode=1
+    doas vpd.old -i RW_VPD -s check_enrollment=1
+    doas vpd.old -i RW_VPD -s block_devmode=1
+    doas crossystem.old block_devmode=1
 
     echo "Done. Press enter to reboot"
     swallow_stdin
     read -r
     echo "bye!"
     sleep 2
-    reboot
+    doas reboot
     sleep 1000
 }
 harddisableext() { # calling it "hard disable" because it only reenables when you press
