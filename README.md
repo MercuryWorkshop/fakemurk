@@ -85,6 +85,7 @@ Now, there's also the chance that something is genuinely broken and if you get t
 
 
 ## Credits
- - r58Playz#3467 - confirmed that this exploit was possible and made an initial set of instructions
- - CoolElectronics#4683 - thought of this exploit and made this setup script
- - the rest of the MW team - helped with testing and other various parts
+ - r58Playz#3467 - created bash emulators for vpd and crossystem, trawled through chromium source to find out what needed to be patched
+ - CoolElectronics#4683 - initial idea for the project, created the installer
+ - Rafflesia#8396 - found user policy modification, which is used here
+ - The rest of the Mercury Workshop team - assistance with testing and miscellaneous files
