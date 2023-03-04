@@ -42,11 +42,6 @@ bash <(curl -SLk https://github.com/MercuryWorkshop/fakemurk/releases/latest/dow
 
 Do everything it tells you to, and your chromebook will reboot.
 
-## Credits
- - r58Playz#3467 - confirmed that this exploit was possible and made an initial set of instructions
- - CoolElectronics#4683 - thought of this exploit and made this setup script
- - the rest of the MW team - helped with testing and other various parts
-
 ### READ THIS IT IS IMPORTANT!!!
 
 If you simply press ctrl-d on the devmode screen and proceed as normal, there's a good chance you'll be stuck on the "enrolling device" screen forever. What you want to do is press space to proceed, and then press refresh+power. This will result in a "Chrome OS is missing or damaged" screen. THIS IS SUPPOSED TO HAPPEN!. Press escape+refresh+power, then ctrl+d and enter to enable devmode. When you get back to the "OS verification screen" press Ctrl-D to boot.
@@ -87,3 +82,9 @@ If this doesn't work, there's an 85% chance you did something really dumb while 
 You should NOT ping or dm any of the creators about your failure.
 
 Now, there's also the chance that something is genuinely broken and if you get the text `"THIS IS A BUG, REPORT IT HERE https://github.com/MercuryWorkshop/fakemurk/issues"`, you should do just that, but making sure you don't see any duplicates first. Follow the [issue template](https://github.com/MercuryWorkshop/fakemurk/blob/main/ISSUE_TEMPLATE)
+
+
+## Credits
+ - r58Playz#3467 - confirmed that this exploit was possible and made an initial set of instructions
+ - CoolElectronics#4683 - thought of this exploit and made this setup script
+ - the rest of the MW team - helped with testing and other various parts
