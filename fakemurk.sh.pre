@@ -52,11 +52,6 @@ leave() {
 config() {
     swallow_stdin
 
-    echo "please enter the your managed email's domain. example: if your email is \"randomstudent@skid.edu\" then you will enter skid.edu"
-    echo "if you don't enter it correctly you won't be able to login, double check this"
-    read -r -p "> " EMAIL
-    echo
-
     swallow_stdin
     echo
     read -r -p "Would you like to enable rootfs restore? It will add an option to quickly revert all changes and re-enroll. (Y/n)" choice
@@ -172,7 +167,7 @@ drop_crossystem_sh() {
 }
 drop_pollen() {
     mkdir -p "$ROOT/etc/opt/chrome/policies/managed"
-    raw_pollen | sed -e "s/__SED_REPLACEME_SCHOOL_EMAIL__/${EMAIL}/g" >$ROOT/etc/opt/chrome/policies/managed/policy.json
+    raw_pollen >$ROOT/etc/opt/chrome/policies/managed/policy.json
     chmod 777 "$ROOT/etc/opt/chrome/policies/managed/policy.json"
 
 }
