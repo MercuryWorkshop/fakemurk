@@ -16,6 +16,7 @@
     "DnsOverHttpsMode": "among us",
     "SystemTerminalSshAllowed": true,
     "ExtensionInstallBlockList": [],
+    "ExtensionInstallBlocklist": [],
     "VirtualMachinesAllowed": true,
     "CrostiniAllowed": true,
     "ReportCrostiniUsageEnabled": false,
