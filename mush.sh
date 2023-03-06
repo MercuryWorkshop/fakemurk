@@ -155,7 +155,7 @@ softdisableext() {
     done
 }
 install_crouton() {
-    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce" && touch /mnt/stateful_partition/crouton
+    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce -r bullseye" && touch /mnt/stateful_partition/crouton
 }
 if [ "$0" = "$BASH_SOURCE" ]; then
     stty sane
