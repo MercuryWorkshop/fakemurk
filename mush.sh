@@ -51,7 +51,7 @@ swallow_stdin() {
 }
 
 edit() {
-    if [ -f /usr/bin/nano ]; then
+    if which nano 2>/dev/null; then
         doas nano "$@"
     else
         doas vi "$@"
@@ -77,7 +77,7 @@ EOF
             echo "(10) Install Crouton"
         fi
         swallow_stdin
-        read -r -p "> (1-11): " choice
+        read -r -p "> (1-10): " choice
         case "$choice" in
         1) runjob doas bash ;;
         2) runjob bash ;;
@@ -152,6 +152,7 @@ softdisableext() {
     echo "Extensions will stay disabled until you press Ctrl+c or close this tab"
     while true; do
         kill -9 $(pgrep -f "\-\-extension\-process") 2>/dev/null
+        sleep 0.5
     done
 }
 install_crouton() {
