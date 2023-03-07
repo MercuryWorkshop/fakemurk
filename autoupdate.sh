@@ -8,7 +8,7 @@ install() {
     get_asset "$1" >"$TMP"
     if [ "$?" == "1" ] || ! grep -q '[^[:space:]]' "$TMP"; then
         echo "failed to install $1 to $2"
-        # rm -f "$TMP"
+        rm -f "$TMP"
         return 1
     fi
     # don't mv, as that would break permissions i spent so long setting up
