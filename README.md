@@ -15,7 +15,7 @@ The Skid Dictionary of the English Language, 7th Edition.
 
 `fakemurk` is a tool intended for use on an already unenrolled chromebook. It will allow you to re-enroll, making your chromebook appear identical to an enrolled one, except keep developer mode, and even boot off a linux USB, all while **_tricking chromeOS into thinking you're in verified mode_**, so your chromebook will not show up any different from the hundreds of other chromebooks in your enterprise's google admin console.
 
-If you're interested, check out coolelectronics's [writeup/blog](https://coolelectronics.me/breaking-cros-3)
+If you're interested, check out coolelectronics's [writeup/blog](https://coolelectronics.me/blog/breaking-cros-3)
 
 ## Why should I use this?
 
