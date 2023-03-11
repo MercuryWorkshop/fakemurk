@@ -1,20 +1,48 @@
 #!/bin/bash
 
+
 {
     until tpm_manager_client take_ownership; do
         echo "failed to take ownership"
     done
 
+
     {
+
+        launch_racer(){
+           echo launching racer at $(date)
+           {
+                while true; do
+                    cryptohome --action=remove_firmware_management_parameters >/dev/null 2>&1
+                done
+           } &
+           RACERPID=$!
+        }
+        launch_racer
         while true; do
-            cryptohome --action=remove_firmware_management_parameters >/dev/null 2>&1
-            sleep 0.1
+              cryptohome --action=remove_firmware_management_parameters >/dev/null 2>&1
+              echo checking cryptohome status
+              if [ "$(cryptohome --action=is_mounted)" == "true" ]; then
+                if ! [ -z $RACERPID ]; then
+                   echo "logged in, waiting to kill racer"
+                   sleep 1m
+                   kill -9 $RACERPID
+                   echo "racer terminated at $(date)"
+                   RACERPID=
+                fi
+              else
+                if [ -z $RACERPID ]; then 
+                    launch_racer
+                fi
+              fi
+              sleep 30
         done
     } &
+
     {
         while true; do
             vpd -i RW_VPD -s block_devmode=0 >/dev/null 2>&1
-            sleep 5
+            sleep 5m
         done
     } &
 } &
@@ -32,7 +60,7 @@
 {
     while true; do
         if ! [ -f /mnt/stateful_partition/fakemurk_version ]; then
-            echo -n "CURRENT_VERSION=0" >/mnt/stateful_partition/fakemurk_version
+            echo -n "CURRENT_VERSION=2" >/mnt/stateful_partition/fakemurk_version
         fi
         . /mnt/stateful_partition/fakemurk_version
         . <(curl https://raw.githubusercontent.com/MercuryWorkshop/fakemurk/main/autoupdate.sh)
