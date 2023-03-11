@@ -30,15 +30,16 @@ Welcome to mush, the fakemurk developer shell.
 If you got here by mistake, don't panic! Just close this tab and carry on.
 
 This shell contains a list of utilities for performing certain actions on a fakemurked chromebook
+
 EOF
 
     if ! test -f /mnt/stateful_partition/telemetry_selected; then
         read -r -p "Would you like to opt-in to telemetry? To figure out what Mercury should focus on next and get a general idea of what the most common policies are, your policy will be sent to our servers. Depending on how management is setup, this may contain the name of your school district and or wifi password. Policies that may contain that information will never be shared publicly. Would you like to enable this feature (pls say yes 🥺) [Y\n]" choice
         case "$choice" in
             n | N) : ;;
-            *) touch /mnt/stateful_partition/telemetry_opted_in ;;
+            *) doas touch /mnt/stateful_partition/telemetry_opted_in ;;
         esac
-        touch /mnt/stateful_partition/telemetry_selected
+        doas touch /mnt/stateful_partition/telemetry_selected
     fi
 }
 doas() {
