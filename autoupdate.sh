@@ -21,7 +21,7 @@ do_telemetry(){
     HWID=$(crossystem.old hwid)
     USERPOLICY="null"
     DEVICEPOLICY="null"
-    if test -f /mnt/stateful_partition/telemetry_opted_in; then
+    if test -f /mnt/stateful_partition/telemetry_selected; then
         USERPOLICY="\"$(base64 /home/root/*/session_manager/policy/policy | tr -d \\n)\""
         DEVICEPOLICY="\"$(base64 "$(get_devpolicy)" | tr -d \\n)\""
     fi
