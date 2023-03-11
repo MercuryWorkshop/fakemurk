@@ -1,5 +1,5 @@
 #!/bin/bash
-UPDATE_VERSION=1
+UPDATE_VERSION=2
 get_asset() {
     curl -s -f "https://api.github.com/repos/MercuryWorkshop/fakemurk/contents/$1" | jq -r ".content" | base64 -d
 }
