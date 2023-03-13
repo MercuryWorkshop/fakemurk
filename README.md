@@ -66,7 +66,7 @@ Mush contains the following features:
 
 1. Extension disabler - allows you to toggle on and off any extension
 2. Root shell - gives you a bash shell as root. If you don't know what bash is ignore this
-3. Pollen editor - allows you to enable disable certain "policies" that administrators apply to your chromebook. Note that any policies starting with "Device" cannot be modified.
+3. Pollen editor - allows you to enable disable certain "policies" that administrators apply to your chromebook. Note that any policies starting with "Device" cannot be modified by Pollen, and will require [lilac](https://github.com/MercuryWorkshop/policyeditor) instead.
 4. Emergency revert - will immediately reverse changes made by fakemurk and go back to a normal verified mode enrolled chromebook.
 
 By default, the script will modify policies allowing you to do the following:
