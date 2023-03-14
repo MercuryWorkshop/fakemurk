@@ -54,7 +54,7 @@ If you get another "Chrome OS is missing" screen, and you're absolutely sure tha
 
 ### VERSION REPORTING NOTE
 
-fakemurk does not fake reporting what version you're on. If you downgrade to v107 and use fakemurk that could raise flags as your version will be much lower. A working chain of events is: Recover with a v107 recovery image, then sh1mmer, **then update to 111 or whatever the latest stable version is**, then use fakemurk, and repeat on new releases.
+fakemurk does not fake reporting what version you're on. The longer you stay on the same version with fakemurk could start to raise flags as your version will be much lower. After a few months, consider recovering with a v107 recovery image, then run sh1mmer to unenroll, **then update to 111 or whatever the latest stable version is**, then use fakemurk, and repeat on new releases. You only need to do this every once in a while.
 
 ## How it works
 
