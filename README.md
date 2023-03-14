@@ -52,6 +52,10 @@ If you get another "Chrome OS is missing" screen, and you're absolutely sure tha
 
 (note that if you have a "dedede" chromebook, the steps for enabling and disabling devmode are slightly different but you should already know or know how to google)
 
+### VERSION REPORTING NOTE
+
+fakemurk does not fake reporting what version you're on. If you downgrade to v107 and use fakemurk that could raise flags as your version will be much lower. A working chain of events is: Recover with a v107 recovery image, then sh1mmer, **then update to 111 or whatever the latest stable version is**, then use fakemurk, and repeat on new releases.
+
 ## How it works
 
 ChromeOS interally uses a library called "crossystem" (chrome os system), which reports critical low-level information about the current state of the system, such as the hardware ID, and importantly here whether devmode is enabled or not. Since a lot of low level ChromeOS code is written in bash, it couldn't have crossystem be a c++ library, so it gets compiled to a static binary on the system instead. `crossystem` isn't the only internal library written like this, but it's the most important one. Again, if you want to know more about how this works, look at the [writeup](https://coolelectronics.me/blog/breaking-cros-3)
