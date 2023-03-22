@@ -48,7 +48,7 @@ If you simply press ctrl-d on the devmode screen and proceed as normal, there's 
 
 IF THIS HAPPENS, what you want to do is press refresh+power to reboot the chromebook, when it gives you the os verification screen press space to **disable devmode**, and then press refresh+power. This will result in a "Chrome OS is missing or damaged" screen. THIS IS SUPPOSED TO HAPPEN!. Press escape+refresh+power, then ctrl+d and enter to **reenable devmode**. When you get back to the "OS verification screen" press Ctrl-D to boot.
 
-If you get another "Chrome OS is missing" screen, and you're absolutely sure that you didn't press space after the re-enable step, you might have run into a semi-common bug. We haven't pinned down the cause of this yet, but it can usually be fixed by downgrading/recovering to a 107 or 105 image, then
+If you get another "Chrome OS is missing" screen, and you're absolutely sure that you didn't press space after the re-enable step, you might have run into a semi-common bug. We haven't pinned down the cause of this yet, but it can usually be fixed by downgrading/recovering to a 107 or 105 image, then restarting all the steps from the beginning, but **make sure to omit the devmode cycle steps above**, and just keep devmode on the entire time.
 
 (note that if you have a "dedede" chromebook, the steps for enabling and disabling devmode are slightly different but you should already know or know how to google)
 
