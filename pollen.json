@@ -69,5 +69,8 @@
 	"DownloadDirectory": null,
 	"DownloadBubbleEnabled": null,
 	"OsColorMode": null,
-	"ArcPolicy": null
+	"ArcPolicy": null,
+	"InstantTetheringAllowed": true,
+	"SmartLockSigninAllowed": true,
+	"NearbyShareAllowed": true
 }
