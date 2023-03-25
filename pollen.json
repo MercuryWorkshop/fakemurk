@@ -72,6 +72,5 @@
 	"ArcPolicy": null,
 	"InstantTetheringAllowed": true,
 	"SmartLockSigninAllowed": true,
-	"NearbyShareAllowed": true,
-	"WallpaperImage": {}
+	"NearbyShareAllowed": true
 }
