@@ -86,6 +86,7 @@ EOF
         if ! test -f /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
         fi
+        echo "(11) Purchase Fakemurk Premium"
         swallow_stdin
         read -r -p "> (1-10): " choice
         case "$choice" in
@@ -99,11 +100,28 @@ EOF
         8) runjob revert ;;
         9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
         10) runjob install_crouton ;;
+        11) runjob premium_troll ;; 
         *) echo "invalid option" ;;
         esac
     done
 }
-
+premium_troll(){
+    echo "Fakemurk Premium! Unlock extra features for your chromebook."
+    sleep 1
+cat <<-EOF
+╭─────────────────────────────┬────────────────────────────────────────────────╮
+│            Basic            │                Fakemurk Premium                │
+├─────────────────────────────┼────────────────────────────────────────────────┤
+│ Can only use one device     │ Cross device pollen sync                       │
+│ Could be detected by admins │ Employs advanced anti-admin detection bypasses │
+│ no skid protection          │ guarenteed skid protection                     │
+│ hardly shimming             │ shimming hardly                                │
+╰─────────────────────────────┴────────────────────────────────────────────────╯
+EOF
+    sleep 3
+    echo "Fakemurk Premium is available for purchase at https://sh1mmer.com/premium"
+    sleep 2
+}
 powerwash() {
     echo "ARE YOU SURE YOU WANT TO POWERWASH??? THIS WILL REMOVE ALL USER ACCOUNTS"
     sleep 2
