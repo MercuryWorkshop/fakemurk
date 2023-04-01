@@ -1,0 +1,43 @@
+#include "fakemurk_lib.sh.pre"
+: "this is essentially just wax for fakemurk"
+SCRIPT_DIR=$(dirname "$0")
+configure_binaries(){
+  if [ -f /usr/share/vboot/bin/make_dev_ssd.sh ]; then
+    MAKE_DEV_SSD=/usr/share/vboot/bin/make_dev_ssd.sh
+  elif [ -f "${SCRIPT_DIR}/lib/make_dev_ssd.sh" ]; then
+    MAKE_DEV_SSD="${SCRIPT_DIR}/lib/make_dev_ssd.sh"
+  else
+    echo "ERROR: Cannot find the required make_dev_ssd script. Please make sure you're executing this script inside the directory it resides in"
+    return 1
+  fi
+}
+
+main() {
+  ascii_info
+  configure_binaries
+  echo $MAKE_DEV_SSD
+
+  if [ -z $1 ] || [ ! -f $1 ]; then
+    echo "\"$1\" is not a real file!!! You need to pass the path to the recovery image"
+    exit
+  fi
+
+  echo "Creating loop device"
+  loop=$(losetup -f)
+  losetup -P $loop $bin
+
+  echo "Disabling target verity"
+  $MAKE_DEV_SSD --remove_rootfs_verification -i ${loop} --partitions 5
+  
+  echo "Creating Mountpoint"
+  mkdir mnt || :
+}
+
+if [ "$0" = "$BASH_SOURCE" ]; then
+    stty sane
+    if [ "$EUID" -ne 0 ]; then
+        echo "Please run as root"
+        exit
+    fi
+    main "$@"
+fi
