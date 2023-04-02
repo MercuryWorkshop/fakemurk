@@ -165,7 +165,7 @@ revert() {
     sleep 1000
 }
 harddisableext() { # calling it "hard disable" because it only reenables when you press
-    echo "Please choose the extension you wish to enable."
+    echo "Please choose the extension you wish to disable."
     echo "(1) GoGuardian"
     echo "(2) Securly Filter"
     echo "(3) LightSpeed Filter"
