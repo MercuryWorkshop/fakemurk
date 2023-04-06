@@ -86,7 +86,6 @@ EOF
         if ! test -f /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
         fi
-        echo "(11) Purchase Fakemurk Premium"
         swallow_stdin
         read -r -p "> (1-10): " choice
         case "$choice" in
