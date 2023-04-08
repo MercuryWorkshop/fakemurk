@@ -22,15 +22,7 @@ opposite_num() {
     fi
 }
 
-disable_autoupdates() {
-    # thanks phene i guess?
-    # this is an intentionally broken url so it 404s, but doesn't trip up network logging
-    sed -i "$ROOT/etc/lsb-release" -e "s/CHROMEOS_AUSERVER=.*/CHROMEOS_AUSERVER=$(sed_escape "https://updates.gooole.com/update")/"
 
-    # we don't want to take ANY chances
-    move_bin "$ROOT/usr/sbin/chromeos-firmwareupdate"
-    nullify_bin "$ROOT/usr/sbin/chromeos-firmwareupdate"
-}
 
 prepare_target_root() {
     sleep 2
@@ -156,6 +148,7 @@ configure_target() {
 patch_root() {
     echo "disabling autoupdates"
     disable_autoupdates
+    drop_cr50_update
     sleep 2
     echo "dropping crossystem.sh"
     mv "$ROOT/usr/bin/crossystem" "$ROOT/usr/bin/crossystem.old"

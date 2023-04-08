@@ -121,6 +121,26 @@ lsbval() {
       p
     }" "${lsbfile}"
 }
+get_booted_kernnum() {
+    if doas "((\$(cgpt show -n \"$dst\" -i 2 -P) > \$(cgpt show -n \"$dst\" -i 4 -P)))"; then
+        echo -n 2
+    else
+        echo -n 4
+    fi
+}
+opposite_num() {
+    if [ "$1" == "2" ]; then
+        echo -n 4
+    elif [ "$1" == "4" ]; then
+        echo -n 2
+    elif [ "$1" == "3" ]; then
+        echo -n 5
+    elif [ "$1" == "5" ]; then
+        echo -n 3
+    else
+        return 1
+    fi
+}
 attempt_update(){
     local builds=$(curl https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS)
     local board=octopus
@@ -136,16 +156,38 @@ attempt_update(){
         # read choice
         local reco_dl=$(jq ".builds.$board[].$hwid.pushRecoveries[$latest_milestone]" <<< "$builds")
         local tmpdir=/mnt/stateful_partition/update_tmp/
-        mkdir $tmpdir
+        doas mkdir $tmpdir
         echo "downloading ${remote_version} from ${reco_dl}"
-        curl "${reco_dl:1:-1}" | dd of=$tmpdir/image.zip status=progress
+        curl "${reco_dl:1:-1}" | doas "dd of=$tmpdir/image.zip status=progress"
         echo "unzipping update binary"
-        cat $tmpdir/image.zip | gunzip | dd of=$tmpdir/image.bin status=progress
-        rm -f $tmpdir/image.zip
+        cat $tmpdir/image.zip | gunzip | doas "dd of=$tmpdir/image.bin status=progress"
+        doas rm -f $tmpdir/image.zip
         echo "invoking image patcher"
+        doas image_patcher.sh "$tmpdir/image.bin"
 
+        local loop=$(doas losetup -f)
+        doas losetup -P "$loop" "$tmpdir/image.bin"
+        echo "performing update"
+        local dst=/dev/$(get_largest_nvme_namespace)
+        local tgt_kern=$(opposite_num $(get_booted_kernnum))
+        local tgt_root=$(( $tgt_kern + 1 ))
 
-        # rm -rf $tmpdir
+        local kerndev=${dst}p${tgt_kern}
+        local rootdev=${dst}p${tgt_root}
+        echo "installing kernel patch to ${kerndev}"
+        doas dd if="${loop}p4" of="$kerndev" status=progress
+        echo "installing root patch to ${rootdev}"
+        doas dd if="${loop}p3" of="$rootdev" status=progress
+        echo "setting kernel priority"
+        doas cgpt add "$dst" -i 4 -P 0
+        doas cgpt add "$dst" -i 2 -P 0
+        doas cgpt add "$dst" -i "$tgt_kern" -P 1
+
+        doas crossystem.old block_devmode=0
+        doas vpd -i RW_VPD -s block_devmode=0
+
+        # doas rm -rf $tmpdir
+    
     else
         echo "update not required"
     fi
@@ -173,7 +215,7 @@ revert() {
 
     DST=/dev/$(get_largest_nvme_namespace)
 
-    if doas "(($(cgpt show -n "$DST" -i 2 -P) > $(cgpt show -n "$DST" -i 4 -P)))"; then
+    if doas "((\$(cgpt show -n \"$DST\" -i 2 -P) > \$(cgpt show -n \"$DST\" -i 4 -P)))"; then
         doas cgpt add "$DST" -i 2 -P 0
         doas cgpt add "$DST" -i 4 -P 1
     else
@@ -181,8 +223,8 @@ revert() {
         doas cgpt add "$DST" -i 2 -P 1
     fi
     echo "setting vpd"
-    doas vpd.old -i RW_VPD -s check_enrollment=1
-    doas vpd.old -i RW_VPD -s block_devmode=1
+    doas vpd -i RW_VPD -s check_enrollment=1
+    doas vpd -i RW_VPD -s block_devmode=1
     doas crossystem.old block_devmode=1
 
     echo "Done. Press enter to reboot"

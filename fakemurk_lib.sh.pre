@@ -152,10 +152,15 @@ EOF
     chmod 777 "$ROOT/usr/bin/crosh"
 }
 drop_ssd_util(){
-    base64 -d <<-EOF | bunzip2 -dc >"$ROOT/sbin/ssd_util.sh"
+    base64 -d <<-EOF | bunzip2 -dc >"$ROOT/usr/share/vboot/bin/ssd_util.sh"
 #include "lib/ssd_util.sh.b64"
 EOF
-    chmod 777 "$ROOT/sbin/ssd_util.sh"
+    chmod 777 "$ROOT/usr/share/vboot/bin/ssd_util.sh"
+}
+drop_cr50_update(){
+    base64 -d <<-EOF | bunzip2 -dc >"$ROOT/etc/init/cr50-update.conf"
+#include "cr50-update.conf.b64"
+EOF
 }
 
 
@@ -250,6 +255,11 @@ disable_autoupdates() {
     # we don't want to take ANY chances
     move_bin "$ROOT/usr/sbin/chromeos-firmwareupdate"
     nullify_bin "$ROOT/usr/sbin/chromeos-firmwareupdate"
+
+    # bye bye trollers! (trollers being cros devs)
+    echo "$ROOT/etc/init/cr50-update.conf" || :
+    echo "$ROOT/opt/google/cr50/firmware/"* || :
+    echo "$ROOT/etc/init/"fwup* || :
 }
 
 

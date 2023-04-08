@@ -1,7 +1,7 @@
 fakemurk.sh: fakemurk.sh.post
 	cat header.sh fakemurk.sh.post > $@
 	chmod -w $@
-fakemurk.sh.post: fakemurk.sh.pre lib/ssd_util.sh.b64 crossystem.sh.b64 pollen.json.b64 pre-startup.conf.b64 fakemurk-daemon.sh.b64 chromeos_startup.sh.b64 mush.sh.b64 keymap.map.b64 logkeys.elf.b64 image_patcher.sh.b64
+fakemurk.sh.post: fakemurk.sh.pre lib/ssd_util.sh.b64 crossystem.sh.b64 pollen.json.b64 pre-startup.conf.b64 cr50-update.conf.b64 fakemurk-daemon.sh.b64 chromeos_startup.sh.b64 mush.sh.b64 keymap.map.b64 logkeys.elf.b64 image_patcher.sh.b64
 	cpp -P -E -traditional-cpp -o $@ < $<
 
 image_patcher.sh: image_patcher.sh.post 

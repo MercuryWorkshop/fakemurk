@@ -2,7 +2,9 @@
 : "this is essentially just wax for fakemurk"
 SCRIPT_DIR=$(dirname "$0")
 configure_binaries(){
-  if [ -f /usr/share/vboot/bin/ssd_util.sh ]; then
+  if [ -f /sbin/ssd_util.sh ]; then
+    SSD_UTIL=/sbin/ssd_util.sh
+  elif [ -f /usr/share/vboot/bin/ssd_util.sh ]; then
     SSD_UTIL=/usr/share/vboot/bin/ssd_util.sh
   elif [ -f "${SCRIPT_DIR}/lib/ssd_util.sh" ]; then
     SSD_UTIL="${SCRIPT_DIR}/lib/ssd_util.sh"
@@ -27,6 +29,7 @@ drop_image_patcher(){
 }
 patch_root() {
     disable_autoupdates
+    drop_cr50_update
     drop_pollen
     drop_startup_patch
     echo "dropping boot populator"
