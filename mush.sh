@@ -105,6 +105,51 @@ EOF
         esac
     done
 }
+# https://chromium.googlesource.com/chromiumos/docs/+/master/lsb-release.md
+lsbval() {
+  local key="$1"
+  local lsbfile="${2:-/etc/lsb-release}"
+
+  if ! echo "${key}" | grep -Eq '^[a-zA-Z0-9_]+$'; then
+    return 1
+  fi
+
+  sed -E -n -e \
+    "/^[[:space:]]*${key}[[:space:]]*=/{
+      s:^[^=]+=[[:space:]]*::
+      s:[[:space:]]+$::
+      p
+    }" "${lsbfile}"
+}
+attempt_update(){
+    local builds=$(curl https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS)
+    local board=octopus
+    local hwid=$(jq "(.builds.$board[] | keys)[0]" <<<"$builds")
+    local hwid=${hwid:1:-1}
+    local latest_milestone=$(jq "(.builds.$board[].$hwid.pushRecoveries | keys) | .[length - 1]" <<<"$builds")
+    local remote_version=$(jq ".builds.$board[].$hwid[$latest_milestone].version" <<<"$builds")
+    local remote_version=${remote_version:1:-1}
+    local local_version=$(lsbval GOOGLE_RELEASE)
+
+    if (( ${remote_version%%\.*} > ${local_version%%\.*} )); then
+        echo "updating to ${remote_version}. is this ok? (y/n)"
+        # read choice
+        local reco_dl=$(jq ".builds.$board[].$hwid.pushRecoveries[$latest_milestone]" <<< "$builds")
+        local tmpdir=/mnt/stateful_partition/update_tmp/
+        mkdir $tmpdir
+        echo "downloading ${remote_version} from ${reco_dl}"
+        curl "${reco_dl:1:-1}" | dd of=$tmpdir/image.zip status=progress
+        echo "unzipping update binary"
+        cat $tmpdir/image.zip | gunzip | dd of=$tmpdir/image.bin status=progress
+        rm -f $tmpdir/image.zip
+        echo "invoking image patcher"
+
+
+        # rm -rf $tmpdir
+    else
+        echo "update not required"
+    fi
+}
 
 powerwash() {
     echo "ARE YOU SURE YOU WANT TO POWERWASH??? THIS WILL REMOVE ALL USER ACCOUNTS"
