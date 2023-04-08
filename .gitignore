@@ -1,6 +1,10 @@
 rw.out
 ro.out
 csys.out
-fakemurk.sh.post
 fakemurk.sh
+crossystem_boot_populator.sh
+image_patcher.sh
 *.b64
+*.post
+cros_sign_backups
+*.dbgbin

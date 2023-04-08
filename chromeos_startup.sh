@@ -37,6 +37,11 @@ Port 1337
 EOF
     touch /sshd_staged
 fi
+if [ -f /population_required ]; then
+    /sbin/crossystem_boot_populator.sh
+    vpd -i RW_VPD -s check_enrollment=1
+    rm -f /population_required
+fi
 
 echo "launching sshd"
 /usr/sbin/sshd -f /ssh/config &

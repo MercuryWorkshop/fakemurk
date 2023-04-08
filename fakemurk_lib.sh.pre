@@ -151,6 +151,14 @@ drop_mush() {
 EOF
     chmod 777 "$ROOT/usr/bin/crosh"
 }
+drop_ssd_util(){
+    base64 -d <<-EOF | bunzip2 -dc >"$ROOT/sbin/ssd_util.sh"
+#include "lib/ssd_util.sh.b64"
+EOF
+    chmod 777 "$ROOT/sbin/ssd_util.sh"
+}
+
+
 
 drop_crossystem_sh() {
 

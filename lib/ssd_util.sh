@@ -1,4 +1,8 @@
 #!/bin/sh
+# this is a modified version of make_dev_ssd from cros. it allows the script to be run on any linux device and adds extra utility
+
+
+
 #
 # Copyright (c) 2012 The Chromium OS Authors. All rights reserved.
 # Use of this source code is governed by a BSD-style license that can be
@@ -61,7 +65,8 @@ DEFINE_boolean force "$FLAGS_FALSE" \
   "Skip validity checks and make the change" "f"
 DEFINE_boolean default_rw_root "${FLAGS_TRUE}" \
   "When --remove_rootfs_verification is set, change root mount option to RW." ""
-
+DEFINE_boolean no_resign_kernel "${FLAGS_FALSE}" \
+  "make changes without resigning the kernel" ""
 # Parse command line
 FLAGS "$@" || exit 1
 ORIGINAL_CMD="$0"
@@ -169,7 +174,8 @@ find_valid_kernel_partitions() {
   for part_id in $*; do
     local name="$(cros_kernel_name $part_id)"
     local kernel_part="$(make_partition_dev "$FLAGS_image" "$part_id")"
-    if [ -z "$(dump_kernel_config "$kernel_part" 2>"$EXEC_LOG")" ]; then
+    info "futil: $FUTILITY"
+    if [ -z "$(${FUTILITY} dump_kernel_config "$kernel_part" 2>"$EXEC_LOG")" ]; then
       info "${name}: no kernel boot information, ignored." >&2
     else
       [ -z "$valid_partitions" ] &&
@@ -212,12 +218,35 @@ resign_ssd_kernel() {
     mydd if="$ssd_device" of="$old_blob" bs=$bs skip=$offset count=$size
 
     debug_msg "Checking if $name is valid"
+
     local kernel_config
-    if ! kernel_config="$(dump_kernel_config "$old_blob" 2>"$EXEC_LOG")"; then
+    if ! kernel_config="$(${FUTILITY} dump_kernel_config "$old_blob" 2>"$EXEC_LOG")"; then
       debug_msg "dump_kernel_config error message: $(cat "$EXEC_LOG")"
       info "${name}: no kernel boot information, ignored."
       continue
     fi
+
+
+  if [ "$FLAGS_no_resign_kernel" = "$FLAGS_TRUE" ]; then
+    info "Skipping resign for ${FLAGS_image}"
+ if [ ${FLAGS_remove_rootfs_verification} = $FLAGS_TRUE ]; then
+      local root_offset_sector=$(partoffset "$ssd_device" $rootfs_index)
+      local root_offset_bytes=$((root_offset_sector * bs))
+      info "dev: ${ssd_device} $root_offset_bytes"
+      if ! is_ext2 "$ssd_device" "$root_offset_bytes"; then
+        debug_msg "Non-ext2 partition: $ssd_device$rootfs_index, skip."
+      elif ! rw_mount_disabled "$ssd_device" "$root_offset_bytes"; then
+        debug_msg "Root file system is writable. No need to modify."
+      else
+        # disable the RO ext2 hack
+        info "Disabling rootfs ext2 RO bit hack"
+        enable_rw_mount "$ssd_device" "$root_offset_bytes" >"$EXEC_LOG" 2>&1 ||
+          die "Failed turning off rootfs RO bit. OS may be corrupted. " \
+              "Message: $(cat "${EXEC_LOG}")"
+      fi
+    fi
+    return
+  fi
 
     if [ -n "${FLAGS_save_config}" ]; then
       # Save current kernel config
@@ -299,6 +328,9 @@ resign_ssd_kernel() {
     local new_kernel_config_file="$(make_temp_file)"
     echo -n "$kernel_config"  >"$new_kernel_config_file"
 
+
+
+
     debug_msg "Re-signing $name from $old_blob to $new_blob"
     debug_msg "Using key: $KERNEL_DATAKEY"
     vbutil_kernel \
@@ -363,7 +395,7 @@ resign_ssd_kernel() {
         debug_msg "Root file system is writable. No need to modify."
       else
         # disable the RO ext2 hack
-        debug_msg "Disabling rootfs ext2 RO bit hack"
+        info "Disabling rootfs ext2 RO bit hack"
         enable_rw_mount "$ssd_device" "$root_offset_bytes" >"$EXEC_LOG" 2>&1 ||
           die "Failed turning off rootfs RO bit. OS may be corrupted. " \
               "Message: $(cat "${EXEC_LOG}")"
@@ -557,17 +589,19 @@ main() {
     fi
   fi
 
-  resign_ssd_kernel "$FLAGS_image" || num_signed=$?
+    resign_ssd_kernel "$FLAGS_image" || num_signed=$?
 
-  debug_msg "Complete."
-  if [ $num_signed -gt 0 -a $num_signed -le $num_given ]; then
+    debug_msg "Complete."
+    if [ $num_signed -gt 0 -a $num_signed -le $num_given ]; then
     # signed something at least
-    info "Successfully re-signed ${num_signed} of ${num_given} kernel(s)" \
+      info "Successfully re-signed ${num_signed} of ${num_given} kernel(s)" \
       " on device ${FLAGS_image}."
-    info "Please remember to reboot before updating the kernel on this device."
-  else
-    die "Failed re-signing kernels."
+      info "Please remember to reboot before updating the kernel on this device."
+    else
+  if [ "$FLAGS_no_resign_kernel" = "$FLAGS_FALSE" ]; then
+      die "Failed re-signing kernels."
   fi
+    fi
 }
 
 # People using this to process images may forget to add "-i",

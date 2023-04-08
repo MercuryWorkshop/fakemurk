@@ -86,6 +86,7 @@ EOF
         if ! test -f /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
         fi
+        echo "(11) Attempt to update to the latest chrome os version (BETA, BUGGY, MAY BREAK)"
         swallow_stdin
         read -r -p "> (1-10): " choice
         case "$choice" in
@@ -99,6 +100,7 @@ EOF
         8) runjob revert ;;
         9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
         10) runjob install_crouton ;;
+        11) runjob attempt_update;;
         *) echo "invalid option" ;;
         esac
     done
