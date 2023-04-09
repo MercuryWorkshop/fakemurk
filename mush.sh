@@ -164,13 +164,73 @@ revert() {
     sleep 1000
 }
 harddisableext() { # calling it "hard disable" because it only reenables when you press
-    read -r -p "enter extension id>" extid
+    echo "Please choose the extension you wish to disable."
+    echo "(1) GoGuardian"
+    echo "(2) Securly Filter"
+    echo "(3) LightSpeed Filter"
+    echo "(4) Cisco Umbrella"
+    echo "(5) ContentKeeper Authenticator"
+    echo "(6) Hapara"
+    echo "(7) iboss"
+    echo "(8) LightSpeed Classroom"
+    echo "(9) Blocksi"
+    echo "(10) Linewize"
+    echo "(11) Securly Classroom"
+    echo "(12) Impero"
+    echo "(13) put extension ID in manually"
+    read -r -p "> (1-13): " choice
+    case "$choice" in
+    1) extid=haldlgldplgnggkjaafhelgiaglafanh;;
+    2) extid=iheobagjkfklnlikgihanlhcddjoihkg;;
+    3) extid=adkcpkpghahmbopkjchobieckeoaoeem;;
+    4) extid=jcdhmojfecjfmbdpchihbeilohgnbdci;;
+    5) extid=jdogphakondfdmcanpapfahkdomaicfa;;
+    6) extid=aceopacgaepdcelohobicpffbbejnfac;;
+    7) extid=kmffehbidlalibfeklaefnckpidbodff;;
+    8) extid=jaoebcikabjppaclpgbodmmnfjihdngk;;
+    9) extid=ghlpmldmjjhmdgmneoaibbegkjjbonbk;;
+    10) extid=ddfbkhpmcdbciejenfcolaaiebnjcbfc;;
+    11) extid=jfbecfmiegcjddenjhlbhlikcbfmnafd;;
+    12) extid=jjpmjccpemllnmgiaojaocgnakpmfgjg;;
+    13) read -r -p "enter extension id>" extid;;
+    *) echo "invalid option" ;;
+    esac
     chmod 000 "/home/chronos/user/Extensions/$extid"
     kill -9 $(pgrep -f "\-\-extension\-process")
 }
 
 hardenableext() {
-    read -r -p "enter extension id>" extid
+    echo "Please choose the extension you wish to enable."
+    echo "(1) GoGuardian"
+    echo "(2) Securly Filter"
+    echo "(3) LightSpeed Filter"
+    echo "(4) Cisco Umbrella"
+    echo "(5) ContentKeeper Authenticator"
+    echo "(6) Hapara"
+    echo "(7) iboss"
+    echo "(8) LightSpeed Classroom"
+    echo "(9) Blocksi"
+    echo "(10) Linewize"
+    echo "(11) Securly Classroom"
+    echo "(12) Impero"
+    echo "(13) put extension ID in manually"
+    read -r -p "> (1-13): " choice
+    case "$choice" in
+    1) extid=haldlgldplgnggkjaafhelgiaglafanh;;
+    2) extid=iheobagjkfklnlikgihanlhcddjoihkg;;
+    3) extid=adkcpkpghahmbopkjchobieckeoaoeem;;
+    4) extid=jcdhmojfecjfmbdpchihbeilohgnbdci;;
+    5) extid=jdogphakondfdmcanpapfahkdomaicfa;;
+    6) extid=aceopacgaepdcelohobicpffbbejnfac;;
+    7) extid=kmffehbidlalibfeklaefnckpidbodff;;
+    8) extid=jaoebcikabjppaclpgbodmmnfjihdngk;;
+    9) extid=ghlpmldmjjhmdgmneoaibbegkjjbonbk;;
+    10) extid=ddfbkhpmcdbciejenfcolaaiebnjcbfc;;
+    11) extid=jfbecfmiegcjddenjhlbhlikcbfmnafd;;
+    12) extid=jjpmjccpemllnmgiaojaocgnakpmfgjg;;
+    13) read -r -p "enter extension id>" extid;;
+    *) echo "invalid option" ;;
+    esac
     chmod 777 "/home/chronos/user/Extensions/$extid"
     kill -9 $(pgrep -f "\-\-extension\-process")
 }
