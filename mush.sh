@@ -165,7 +165,7 @@ attempt_update(){
         echo "invoking image patcher"
         doas image_patcher.sh "$tmpdir/image.bin"
 
-        local loop=$(doas losetup -f)
+        local loop=$(doas losetup -f | tr -d '\r')
         doas losetup -P "$loop" "$tmpdir/image.bin"
         echo "performing update"
         local dst=/dev/$(get_largest_nvme_namespace)
