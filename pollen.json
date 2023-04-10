@@ -35,6 +35,9 @@
 	"AllowedDomainsForApps": null,
 	"AllowedLanguages": null,
 	"BlockThirdPartyCookies": null,
+	"DefaultCookiesSetting": 1,
+	"CookiesBlockedForUrls": null,
+	"CookiesAllowedForUrls": null,
 	"ExtensionAllowedTypes": null,
 	"ExtensionInstallAllowlist": null,
 	"ExtensionInstallBlocklist": null,
@@ -66,5 +69,8 @@
 	"DownloadDirectory": null,
 	"DownloadBubbleEnabled": null,
 	"OsColorMode": null,
-	"ArcPolicy": null
+	"ArcPolicy": null,
+	"InstantTetheringAllowed": true,
+	"SmartLockSigninAllowed": true,
+	"NearbyShareAllowed": true
 }

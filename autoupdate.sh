@@ -70,9 +70,9 @@ update_files() {
 
 autoupdate() {
     update_files
-    do_telemetry
 }
 
+do_telemetry
 if [ "$0" = "$BASH_SOURCE" ]; then
     autoupdate
 fi
