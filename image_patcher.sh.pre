@@ -1,0 +1,99 @@
+#include "fakemurk_lib.sh.pre"
+: "this is essentially just wax for fakemurk"
+SCRIPT_DIR=$(dirname "$0")
+configure_binaries(){
+  if [ -f /sbin/ssd_util.sh ]; then
+    SSD_UTIL=/sbin/ssd_util.sh
+  elif [ -f /usr/share/vboot/bin/ssd_util.sh ]; then
+    SSD_UTIL=/usr/share/vboot/bin/ssd_util.sh
+  elif [ -f "${SCRIPT_DIR}/lib/ssd_util.sh" ]; then
+    SSD_UTIL="${SCRIPT_DIR}/lib/ssd_util.sh"
+  else
+    echo "ERROR: Cannot find the required ssd_util script. Please make sure you're executing this script inside the directory it resides in"
+    exit 1
+  fi
+}
+drop_boot_populator() {
+    base64 -d <<-EOF | bunzip2 -dc >"$ROOT/sbin/crossystem_boot_populator.sh"
+#include "crossystem_boot_populator.sh.b64"
+EOF
+    chmod 777 "$ROOT/sbin/crossystem_boot_populator.sh"
+}
+
+drop_image_patcher(){
+  local path=$ROOT/sbin/image_patcher.sh
+
+  # trust me
+  echo "$(< $0)"> $path
+  chmod 777 $path
+}
+patch_root() {
+    disable_autoupdates
+    drop_cr50_update
+    drop_pollen
+    drop_startup_patch
+    echo "dropping boot populator"
+    drop_boot_populator
+    echo "installing mush shell"
+    drop_mush
+    echo "dropping fakemurk daemon"
+    drop_daemon
+    echo "staging populator"
+    >$ROOT/population_required
+    >$ROOT/reco_patched
+    echo "preparing ausystem"
+    drop_ssd_util
+    drop_image_patcher
+}
+main() {
+  traps
+  ascii_info
+  configure_binaries
+  echo $SSD_UTIL
+
+  if [ -z $1 ] || [ ! -f $1 ]; then
+    echo "\"$1\" is not a real file!!! You need to pass the path to the recovery image"
+    exit
+  fi
+  local bin=$1
+
+  echo "Creating loop device"
+  local loop=$(losetup -f)
+  losetup -P "$loop" "$bin"
+
+  echo "Disabling kernel verity"
+  $SSD_UTIL --debug --remove_rootfs_verification -i ${loop} --partitions 4
+  echo "Enabling RW mount"
+  $SSD_UTIL --debug --remove_rootfs_verification --no_resign_kernel -i ${loop} --partitions 2
+
+  # for good measure
+  sync
+  
+  echo "Mounting target"
+  mkdir /tmp/mnt || :
+  mount "${loop}p3" /tmp/mnt
+
+  ROOT=/tmp/mnt
+  patch_root
+
+  sleep 2
+  sync
+  echo "done. have fun"
+
+  umount "$ROOT"
+  sync
+  losetup -D "$loop"
+  sync
+  sleep 2
+  rm -rf /tmp/mnt
+  leave
+}
+
+if [ "$0" = "$BASH_SOURCE" ]; then
+    stty sane
+    if [ "$EUID" -ne 0 ]; then
+        echo "Please run as root"
+        exit
+    fi
+    main "$@"
+fi

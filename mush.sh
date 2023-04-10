@@ -85,9 +85,12 @@ main() {
 EOF
         if ! test -f /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
+        else
+            echo "(11) Start Crouton"
         fi
+        echo "(12) Attempt to update to the latest chrome os version (BETA, BUGGY, MAY BREAK)"
         swallow_stdin
-        read -r -p "> (1-10): " choice
+        read -r -p "> (1-12): " choice
         case "$choice" in
         1) runjob doas bash ;;
         2) runjob bash ;;
@@ -99,27 +102,100 @@ EOF
         8) runjob revert ;;
         9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
         10) runjob install_crouton ;;
-        11) runjob premium_troll ;; 
+        11) runjob start_crouton ;;
+        12) runjob attempt_update ;;
         *) echo "invalid option" ;;
         esac
     done
 }
-premium_troll(){
-    echo "Fakemurk Premium! Unlock extra features for your chromebook."
-    sleep 1
-cat <<-EOF
-╭─────────────────────────────┬────────────────────────────────────────────────╮
-│            Basic            │                Fakemurk Premium                │
-├─────────────────────────────┼────────────────────────────────────────────────┤
-│ Can only use one device     │ Cross device pollen sync                       │
-│ Could be detected by admins │ Employs advanced anti-admin detection bypasses │
-│ no skid protection          │ guarenteed skid protection                     │
-│ hardly shimming             │ shimming hardly                                │
-╰─────────────────────────────┴────────────────────────────────────────────────╯
-EOF
-    sleep 3
-    echo "Fakemurk Premium is available for purchase at https://sh1mmer.com/premium"
-    sleep 2
+# https://chromium.googlesource.com/chromiumos/docs/+/master/lsb-release.md
+lsbval() {
+  local key="$1"
+  local lsbfile="${2:-/etc/lsb-release}"
+
+  if ! echo "${key}" | grep -Eq '^[a-zA-Z0-9_]+$'; then
+    return 1
+  fi
+
+  sed -E -n -e \
+    "/^[[:space:]]*${key}[[:space:]]*=/{
+      s:^[^=]+=[[:space:]]*::
+      s:[[:space:]]+$::
+      p
+    }" "${lsbfile}"
+}
+get_booted_kernnum() {
+    if doas "((\$(cgpt show -n \"$dst\" -i 2 -P) > \$(cgpt show -n \"$dst\" -i 4 -P)))"; then
+        echo -n 2
+    else
+        echo -n 4
+    fi
+}
+opposite_num() {
+    if [ "$1" == "2" ]; then
+        echo -n 4
+    elif [ "$1" == "4" ]; then
+        echo -n 2
+    elif [ "$1" == "3" ]; then
+        echo -n 5
+    elif [ "$1" == "5" ]; then
+        echo -n 3
+    else
+        return 1
+    fi
+}
+attempt_update(){
+    local builds=$(curl https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS)
+    local board=octopus
+    local hwid=$(jq "(.builds.$board[] | keys)[0]" <<<"$builds")
+    local hwid=${hwid:1:-1}
+    local latest_milestone=$(jq "(.builds.$board[].$hwid.pushRecoveries | keys) | .[length - 1]" <<<"$builds")
+    local remote_version=$(jq ".builds.$board[].$hwid[$latest_milestone].version" <<<"$builds")
+    local remote_version=${remote_version:1:-1}
+    local local_version=$(lsbval GOOGLE_RELEASE)
+
+    if (( ${remote_version%%\.*} > ${local_version%%\.*} )); then
+        echo "updating to ${remote_version}. THIS WILL DELETE YOUR REVERT BACKUP AND YOU WILL NO LONGER BE ABLE TO REVERT! THIS MAY ALSO DELETE ALL USER DATA!! press enter to confirm, ctrl-c to cancel"
+        read -r
+        sleep 4
+        # read choice
+        local reco_dl=$(jq ".builds.$board[].$hwid.pushRecoveries[$latest_milestone]" <<< "$builds")
+        local tmpdir=/mnt/stateful_partition/update_tmp/
+        doas mkdir $tmpdir
+        echo "downloading ${remote_version} from ${reco_dl}"
+        curl "${reco_dl:1:-1}" | doas "dd of=$tmpdir/image.zip status=progress"
+        echo "unzipping update binary"
+        cat $tmpdir/image.zip | gunzip | doas "dd of=$tmpdir/image.bin status=progress"
+        doas rm -f $tmpdir/image.zip
+        echo "invoking image patcher"
+        doas image_patcher.sh "$tmpdir/image.bin"
+
+        local loop=$(doas losetup -f | tr -d '\r')
+        doas losetup -P "$loop" "$tmpdir/image.bin"
+        echo "performing update"
+        local dst=/dev/$(get_largest_nvme_namespace)
+        local tgt_kern=$(opposite_num $(get_booted_kernnum))
+        local tgt_root=$(( $tgt_kern + 1 ))
+
+        local kerndev=${dst}p${tgt_kern}
+        local rootdev=${dst}p${tgt_root}
+        echo "installing kernel patch to ${kerndev}"
+        doas dd if="${loop}p4" of="$kerndev" status=progress
+        echo "installing root patch to ${rootdev}"
+        doas dd if="${loop}p3" of="$rootdev" status=progress
+        echo "setting kernel priority"
+        doas cgpt add "$dst" -i 4 -P 0
+        doas cgpt add "$dst" -i 2 -P 0
+        doas cgpt add "$dst" -i "$tgt_kern" -P 1
+
+        doas crossystem.old block_devmode=0
+        doas vpd -i RW_VPD -s block_devmode=0
+
+        # doas rm -rf $tmpdir
+    
+    else
+        echo "update not required"
+    fi
 }
 powerwash() {
     echo "ARE YOU SURE YOU WANT TO POWERWASH??? THIS WILL REMOVE ALL USER ACCOUNTS"
@@ -143,7 +219,7 @@ revert() {
 
     DST=/dev/$(get_largest_nvme_namespace)
 
-    if doas "(($(cgpt show -n "$DST" -i 2 -P) > $(cgpt show -n "$DST" -i 4 -P)))"; then
+    if doas "((\$(cgpt show -n \"$DST\" -i 2 -P) > \$(cgpt show -n \"$DST\" -i 4 -P)))"; then
         doas cgpt add "$DST" -i 2 -P 0
         doas cgpt add "$DST" -i 4 -P 1
     else
@@ -151,8 +227,8 @@ revert() {
         doas cgpt add "$DST" -i 2 -P 1
     fi
     echo "setting vpd"
-    doas vpd.old -i RW_VPD -s check_enrollment=1
-    doas vpd.old -i RW_VPD -s block_devmode=1
+    doas vpd -i RW_VPD -s check_enrollment=1
+    doas vpd -i RW_VPD -s block_devmode=1
     doas crossystem.old block_devmode=1
 
     echo "Done. Press enter to reboot"
@@ -243,7 +319,11 @@ softdisableext() {
     done
 }
 install_crouton() {
-    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce -r bullseye" && touch /mnt/stateful_partition/crouton
+    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce -r bullseye"
+    touch /mnt/stateful_partition/crouton
+}
+start_crouton() {
+    doas "startxfce4"
 }
 if [ "$0" = "$BASH_SOURCE" ]; then
     stty sane

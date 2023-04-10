@@ -1,0 +1,3 @@
+#include "fakemurk_lib.sh.pre"
+mv "$ROOT/usr/bin/crossystem" "$ROOT/usr/bin/crossystem.old"
+drop_crossystem_sh
