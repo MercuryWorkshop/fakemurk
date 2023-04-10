@@ -155,7 +155,7 @@ attempt_update(){
     local local_version=$(lsbval GOOGLE_RELEASE)
 
     if (( ${remote_version%%\.*} > ${local_version%%\.*} )); then
-        echo "updating to ${remote_version}. THIS WILL DELETE YOUR REVERT BACKUP AND YOU WILL NO LONGER BE ABLE TO REVERT! press enter to confirm, ctrl-c to cancel"
+        echo "updating to ${remote_version}. THIS WILL DELETE YOUR REVERT BACKUP AND YOU WILL NO LONGER BE ABLE TO REVERT! THIS MAY ALSO DELETE ALL USER DATA!! press enter to confirm, ctrl-c to cancel"
         read -r
         sleep 4
         # read choice
