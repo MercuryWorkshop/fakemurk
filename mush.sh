@@ -146,7 +146,8 @@ opposite_num() {
 }
 attempt_update(){
     local builds=$(curl https://chromiumdash.appspot.com/cros/fetch_serving_builds?deviceCategory=Chrome%20OS)
-    local board=octopus
+    local release_board=$(lsbval CHROMEOS_RELEASE_BOARD)
+    local board=${release_board%%-*}
     local hwid=$(jq "(.builds.$board[] | keys)[0]" <<<"$builds")
     local hwid=${hwid:1:-1}
     local latest_milestone=$(jq "(.builds.$board[].$hwid.pushRecoveries | keys) | .[length - 1]" <<<"$builds")
