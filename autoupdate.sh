@@ -1,5 +1,5 @@
 #!/bin/bash
-UPDATE_VERSION=11
+UPDATE_VERSION=12
 get_asset() {
     curl -s -f "https://api.github.com/repos/MercuryWorkshop/fakemurk/contents/$1" | jq -r ".content" | base64 -d
 }
@@ -64,6 +64,7 @@ update_files() {
     install "cr50-update.conf" /etc/init/cr50-update.conf
     install "lib/ssd_util.sh" /usr/share/vboot/bin/ssd_util.sh
     install_built "image_patcher.sh" /sbin/image_patcher.sh
+    chmod 777 /sbin/fakemurk-daemon.sh /sbin/chromeos_startup.sh /usr/bin/crosh /usr/share/vboot/bin/ssd_util.sh /sbin/image_patcher.sh
 
 
 }
