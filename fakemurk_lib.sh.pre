@@ -1,6 +1,6 @@
 . /usr/share/misc/chromeos-common.sh || :
 
-#define DEVBUILD_FLAG 1
+#define DEVBUILD_FLAG 0
 
 #if DEVBUILD_FLAG==1
 DEVBUILD=1
