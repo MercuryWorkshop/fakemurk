@@ -3,6 +3,9 @@ UPDATE_VERSION=4
 get_asset() {
     curl -s -f "https://api.github.com/repos/MercuryWorkshop/fakemurk/contents/$1" | jq -r ".content" | base64 -d
 }
+get_built_asset(){
+    curl -SLk "https://github.com/MercuryWorkshop/fakemurk/releases/latest/download/$1"
+}
 install() {
     TMP=$(mktemp)
     get_asset "$1" >"$TMP"
@@ -12,6 +15,17 @@ install() {
         return 1
     fi
     # don't mv, as that would break permissions i spent so long setting up
+    cat "$TMP" >"$2"
+    rm -f "$TMP"
+}
+install_built() {
+    TMP=$(mktemp)
+    get_built_asset "$1" >"$TMP"
+    if [ "$?" == "1" ] || ! grep -q '[^[:space:]]' "$TMP"; then
+        echo "failed to install $1 to $2"
+        rm -f "$TMP"
+        return 1
+    fi
     cat "$TMP" >"$2"
     rm -f "$TMP"
 }
@@ -47,6 +61,11 @@ update_files() {
     install "chromeos_startup.sh" /sbin/chromeos_startup.sh
     install "mush.sh" /usr/bin/crosh
     install "pre-startup.conf" /etc/init/pre-startup.conf
+    install "cr50-update.conf" /etc/init/cr50-update.conf
+    install "lib/ssd_util.sh" /usr/share/vboot/bin/ssd_util.sh
+    install_built "image_patcher.sh" /sbin/image_patcher.sh
+
+
 }
 
 autoupdate() {

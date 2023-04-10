@@ -85,10 +85,12 @@ main() {
 EOF
         if ! test -f /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
+        else
+            echo "(11) Start Crouton"
         fi
-        echo "(11) Attempt to update to the latest chrome os version (BETA, BUGGY, MAY BREAK)"
+        echo "(12) Attempt to update to the latest chrome os version (BETA, BUGGY, MAY BREAK)"
         swallow_stdin
-        read -r -p "> (1-10): " choice
+        read -r -p "> (1-12): " choice
         case "$choice" in
         1) runjob doas bash ;;
         2) runjob bash ;;
@@ -100,7 +102,8 @@ EOF
         8) runjob revert ;;
         9) runjob edit /etc/opt/chrome/policies/managed/policy.json ;;
         10) runjob install_crouton ;;
-        11) runjob attempt_update;;
+        11) runjob start_crouton ;;
+        12) runjob attempt_update ;;
         *) echo "invalid option" ;;
         esac
     done
@@ -152,7 +155,9 @@ attempt_update(){
     local local_version=$(lsbval GOOGLE_RELEASE)
 
     if (( ${remote_version%%\.*} > ${local_version%%\.*} )); then
-        echo "updating to ${remote_version}. is this ok? (y/n)"
+        echo "updating to ${remote_version}. THIS WILL DELETE YOUR REVERT BACKUP AND YOU WILL NO LONGER BE ABLE TO REVERT! press enter to confirm, ctrl-c to cancel"
+        read -r
+        sleep 4
         # read choice
         local reco_dl=$(jq ".builds.$board[].$hwid.pushRecoveries[$latest_milestone]" <<< "$builds")
         local tmpdir=/mnt/stateful_partition/update_tmp/
@@ -255,7 +260,11 @@ softdisableext() {
     done
 }
 install_crouton() {
-    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce -r bullseye" && touch /mnt/stateful_partition/crouton
+    doas "bash <(curl -SLk https://goo.gl/fd3zc) -t xfce -r bullseye"
+    touch /mnt/stateful_partition/crouton
+}
+start_crouton() {
+    doas "startxfce4"
 }
 if [ "$0" = "$BASH_SOURCE" ]; then
     stty sane

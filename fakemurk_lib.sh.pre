@@ -1,6 +1,6 @@
 . /usr/share/misc/chromeos-common.sh || :
 
-#define DEVBUILD_FLAG 0
+#define DEVBUILD_FLAG 1
 
 #if DEVBUILD_FLAG==1
 DEVBUILD=1
@@ -257,9 +257,7 @@ disable_autoupdates() {
     nullify_bin "$ROOT/usr/sbin/chromeos-firmwareupdate"
 
     # bye bye trollers! (trollers being cros devs)
-    echo "$ROOT/etc/init/cr50-update.conf" || :
-    echo "$ROOT/opt/google/cr50/firmware/"* || :
-    echo "$ROOT/etc/init/"fwup* || :
+    rm -rf "$ROOT/opt/google/cr50/firmware/" || :
 }
 
 
