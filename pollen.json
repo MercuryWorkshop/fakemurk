@@ -41,6 +41,7 @@
 	"ExtensionAllowedTypes": null,
 	"ExtensionInstallAllowlist": null,
 	"ExtensionInstallBlocklist": null,
+	"ExtensionInstallForcelist": null,
 	"ExtensionSettings": null,
 	"PinnedLauncherApps": null,
 	"BookmarkBarEnabled": null,
