@@ -83,7 +83,7 @@ main() {
 (8) Emergency Revert & Re-Enroll
 (9) Edit Pollen
 EOF
-        if ! test -f /mnt/stateful_partition/crouton; then
+        if ! test -d /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
         else
             echo "(11) Start Crouton"
