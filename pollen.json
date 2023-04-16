@@ -57,12 +57,15 @@
 	"SafeBrowsingProtectionLevel": null,
 	"ProxySettings": null,
 	"DefaultClipboardSetting": null,
+	"ClipboardAllowedForUrls": null,
+	"ClipboardBlockedForUrls": null,
 	"DefaultImagesSetting": null,
 	"DefaultInsecureContentSetting": null,
 	"DefaultJavaScriptSetting": null,
 	"DefaultJavaScriptJitSetting": null,
 	"DefaultNotificationsSetting": null,
 	"DefaultPopupsSetting": null,
+	"DefaultGeolocationSetting": 3,
 	"RestoreOnStartup": null,
 	"RestoreOnStartupURLs": null,
 	"DefaultDownloadDirectory": null,
@@ -72,5 +75,5 @@
 	"ArcPolicy": null,
 	"InstantTetheringAllowed": true,
 	"SmartLockSigninAllowed": true,
-	"NearbyShareAllowed": true
+	"NearbyShareAllowed": true,
 }
