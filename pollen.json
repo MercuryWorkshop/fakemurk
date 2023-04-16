@@ -75,5 +75,5 @@
 	"ArcPolicy": null,
 	"InstantTetheringAllowed": true,
 	"SmartLockSigninAllowed": true,
-	"NearbyShareAllowed": true,
+	"NearbyShareAllowed": true
 }
