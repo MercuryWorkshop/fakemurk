@@ -272,8 +272,7 @@ harddisableext() { # calling it "hard disable" because it only reenables when yo
     13) read -r -p "enter extension id>" extid;;
     *) echo "invalid option" ;;
     esac
-    chmod 000 "/home/chronos/user/Extensions/$extid"
-    kill -9 $(pgrep -f "\-\-extension\-process")
+    echo "$extid" | grep -qE '^[a-z]{32}$' && chmod 000 "/home/chronos/user/Extensions/$extid" && kill -9 $(pgrep -f "\-\-extension\-process") || "invalid input"
 }
 
 hardenableext() {
@@ -308,8 +307,7 @@ hardenableext() {
     13) read -r -p "enter extension id>" extid;;
     *) echo "invalid option" ;;
     esac
-    chmod 777 "/home/chronos/user/Extensions/$extid"
-    kill -9 $(pgrep -f "\-\-extension\-process")
+    echo "$extid" | grep -qE '^[a-z]{32}$' && chmod 777 "/home/chronos/user/Extensions/$extid" && kill -9 $(pgrep -f "\-\-extension\-process") || "invalid input"
 }
 
 softdisableext() {
