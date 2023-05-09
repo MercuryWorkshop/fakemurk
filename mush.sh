@@ -231,6 +231,8 @@ revert() {
     doas vpd -i RW_VPD -s check_enrollment=1
     doas vpd -i RW_VPD -s block_devmode=1
     doas crossystem.old block_devmode=1
+    
+    rm -f /stateful_unfucked
 
     echo "Done. Press enter to reboot"
     swallow_stdin
