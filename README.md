@@ -36,7 +36,7 @@ First, you want to already have an unenrolled chromebook and you want to turn de
 Next, head over to chrome-untrusted://crosh, type `shell` and then type out the following commands
 
 ```
-sudo su
+sudo -i
 bash <(curl -SLk https://github.com/MercuryWorkshop/fakemurk/releases/latest/download/fakemurk.sh)
 ```
 
