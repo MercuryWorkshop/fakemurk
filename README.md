@@ -42,6 +42,12 @@ bash <(curl -SLk https://github.com/MercuryWorkshop/fakemurk/releases/latest/dow
 
 Do everything it tells you to, and your chromebook will reboot.
 
+#### Tip:
+If you get an error about a filesystem being readonly run
+`fsck -f $(rootdev)`
+then reboot
+
+
 ### READ THIS IT IS IMPORTANT!!!
 
 If you simply press ctrl-d on the devmode screen and proceed as normal, there's a good chance you'll be stuck on the "enrolling device" screen forever, then get an enrollment error complaining about a certificate.
