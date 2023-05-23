@@ -46,6 +46,11 @@ doas() {
     ssh -t -p 1337 -i /rootkey -oStrictHostKeyChecking=no root@127.0.0.1 "$@"
 }
 
+fakeapk() {
+    doas curl -SLk https://raw.githubusercontent.com/clockworkindustries/FakeAPK/main/fakeapk.sh -o /tmp/fakeapk.sh
+    doas bash /tmp/fakeapk.sh
+}
+
 runjob() {
     trap 'kill -2 $! >/dev/null 2>&1' INT
     (
@@ -89,8 +94,9 @@ EOF
             echo "(11) Start Crouton"
         fi
         echo "(12) Attempt to update to the latest chrome os version (BETA, BUGGY, MAY BREAK)"
+        echo "(13) Configure FakeAPK (allows you to install APKs and access other devmode features with fakemurk)"
         swallow_stdin
-        read -r -p "> (1-12): " choice
+        read -r -p "> (1-13): " choice
         case "$choice" in
         1) runjob doas bash ;;
         2) runjob bash ;;
@@ -104,6 +110,7 @@ EOF
         10) runjob install_crouton ;;
         11) runjob start_crouton ;;
         12) runjob attempt_update ;;
+        13) runjob fakeapk ;;
         *) echo "invalid option" ;;
         esac
     done
