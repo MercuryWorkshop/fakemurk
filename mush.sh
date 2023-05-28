@@ -83,7 +83,7 @@ main() {
 (8) Emergency Revert & Re-Enroll
 (9) Edit Pollen
 EOF
-        if ! test -f /mnt/stateful_partition/crouton; then
+        if ! test -d /mnt/stateful_partition/crouton; then
             echo "(10) Install Crouton"
         else
             echo "(11) Start Crouton"
@@ -231,6 +231,8 @@ revert() {
     doas vpd -i RW_VPD -s check_enrollment=1
     doas vpd -i RW_VPD -s block_devmode=1
     doas crossystem.old block_devmode=1
+    
+    rm -f /stateful_unfucked
 
     echo "Done. Press enter to reboot"
     swallow_stdin
@@ -272,8 +274,7 @@ harddisableext() { # calling it "hard disable" because it only reenables when yo
     13) read -r -p "enter extension id>" extid;;
     *) echo "invalid option" ;;
     esac
-    chmod 000 "/home/chronos/user/Extensions/$extid"
-    kill -9 $(pgrep -f "\-\-extension\-process")
+    echo "$extid" | grep -qE '^[a-z]{32}$' && chmod 000 "/home/chronos/user/Extensions/$extid" && kill -9 $(pgrep -f "\-\-extension\-process") || "invalid input"
 }
 
 hardenableext() {
@@ -308,8 +309,7 @@ hardenableext() {
     13) read -r -p "enter extension id>" extid;;
     *) echo "invalid option" ;;
     esac
-    chmod 777 "/home/chronos/user/Extensions/$extid"
-    kill -9 $(pgrep -f "\-\-extension\-process")
+    echo "$extid" | grep -qE '^[a-z]{32}$' && chmod 777 "/home/chronos/user/Extensions/$extid" && kill -9 $(pgrep -f "\-\-extension\-process") || "invalid input"
 }
 
 softdisableext() {

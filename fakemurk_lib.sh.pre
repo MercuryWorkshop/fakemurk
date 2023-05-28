@@ -212,7 +212,7 @@ crossystem_values() {
             val="A"
         fi
         if [ "$key" == "cros_debug" ]; then
-            val=0
+            val=1
         fi
         if [ "$key" == "dev_boot_legacy" ]; then
             val=0

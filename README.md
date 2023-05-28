@@ -36,11 +36,17 @@ First, you want to already have an unenrolled chromebook and you want to turn de
 Next, head over to chrome-untrusted://crosh, type `shell` and then type out the following commands
 
 ```
-sudo su
+sudo -i
 bash <(curl -SLk https://github.com/MercuryWorkshop/fakemurk/releases/latest/download/fakemurk.sh)
 ```
 
 Do everything it tells you to, and your chromebook will reboot.
+
+#### Tip:
+If you get an error about a filesystem being readonly run
+`fsck -f $(rootdev)`
+then reboot
+
 
 ### READ THIS IT IS IMPORTANT!!!
 
