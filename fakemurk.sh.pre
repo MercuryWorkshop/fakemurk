@@ -189,6 +189,9 @@ main() {
         sleep 1
     fi
 
+    # make sure it doesn't accidentally brick
+    crossystem dev_boot_signed_only=0
+
     echo "----- stage 1: grabbing disk configuration -----"
     configure_target
 
