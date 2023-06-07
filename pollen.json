@@ -76,5 +76,6 @@
 	"InstantTetheringAllowed": true,
 	"SmartLockSigninAllowed": true,
 	"NearbyShareAllowed": true,
-	"UserAvatarCustomizationSelectorsEnabled": true
+	"UserAvatarCustomizationSelectorsEnabled": true,
+	"DnsOverHttpsMode": null
 }
