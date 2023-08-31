@@ -204,7 +204,7 @@ powerwash() {
     echo "(press enter to continue, ctrl-c to cancel)"
     swallow_stdin
     read -r
-    doas echo "fast safe" >/mnt/stateful_partition/factory_install_reset
+    doas rm -f /stateful_unfucked
     doas reboot
     exit
 }
