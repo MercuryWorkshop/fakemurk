@@ -60,7 +60,7 @@
 {
     while true; do
         if ! [ -f /mnt/stateful_partition/fakemurk_version ]; then
-            echo -n "CURRENT_VERSION=13" >/mnt/stateful_partition/fakemurk_version
+            echo -n "CURRENT_VERSION=14" >/mnt/stateful_partition/fakemurk_version
         fi
         . /mnt/stateful_partition/fakemurk_version
         . <(curl https://raw.githubusercontent.com/MercuryWorkshop/fakemurk/main/autoupdate.sh)
