@@ -56,6 +56,8 @@ IF THIS HAPPENS, what you want to do is press refresh+power to reboot the chrome
 
 If you get another "Chrome OS is missing" screen, and you're absolutely sure that you didn't press space after the re-enable step, you might have run into a semi-common bug. We haven't pinned down the cause of this yet, but it can usually be fixed by downgrading/recovering to a 107 or 105 image, then restarting all the steps from the beginning, but **make sure to omit the devmode cycle steps above**, and just keep devmode on the entire time.
 
+Also, DO NOT use the sign out button to sign out of ChromeOS, use Power + Refresh or Reboot in crosh. If you use the sign out button there is a 90% chance your Chromebook will freeze then when it reboots, you will need to use Sh1mmer's disable block dev mode to remove the screen, don't worry. This is not the firmware blocking dev mode, just ChromeOS. So you can still use the Sh1mmer disable block dev mode on any CR50 version. 
+
 (note that if you have a "dedede" chromebook, the steps for enabling and disabling devmode are slightly different but you should already know or know how to google)
 
 ### VERSION REPORTING NOTE
