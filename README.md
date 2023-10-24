@@ -33,7 +33,7 @@ The list goes on.
 For best results, we recommend recovering with a 107 recovery image prior to running the script. It makes things more consistent and less likely to randomly fail.
 
 First, you want to already have an unenrolled chromebook and you want to turn devmode on. You also might want to prepare a USB with the linux distro of your choice (or maybe chromeos flex). Install [MrChromebox's RW_LEGACY bios](https://mrchromebox.tech/#fwscript) if you haven't already.
-Next, head over to chrome-untrusted://crosh, type `shell` and then type out the following commands
+Next, head over to chrome-untrusted://crosh, type `shell` and then type out the following commands ***one by one***
 
 ```
 sudo -i
