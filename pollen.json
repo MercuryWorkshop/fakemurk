@@ -77,5 +77,6 @@
 	"SmartLockSigninAllowed": true,
 	"NearbyShareAllowed": true,
 	"UserAvatarCustomizationSelectorsEnabled": true,
-	"DnsOverHttpsMode": null
+	"DnsOverHttpsMode": null,
+	"JavaScriptBlockedForUrls": []
 }
