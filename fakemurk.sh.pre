@@ -57,7 +57,7 @@ EOF
 get_largest_cros_blockdev() {
     local largest size dev_name tmp_size remo
     size=0
-    for blockdev in /sys/block/*; do
+    for blockdev in /sys/block/"${dev%n*}"*; do
         dev_name="${blockdev##*/}"
         echo "$dev_name" | grep -q '^\(loop\|ram\)' && continue
         tmp_size=$(cat "$blockdev"/size)
